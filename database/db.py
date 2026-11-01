@@ -18,12 +18,15 @@ SCHEMA_FILE: Path = Path(__file__).resolve().parent / "schema.sql"
 def get_connection(db_path: Optional[Path] = None) -> sqlite3.Connection:
     """
     Establish a connection to the SQLite database.
-    Enables foreign key enforcement and row factory access.
+    Enables WAL mode, busy timeout for multi-user concurrency, foreign key enforcement,
+    and row factory access.
     """
     target_path = db_path or settings.db_path
     target_path.parent.mkdir(parents=True, exist_ok=True)
 
-    conn = sqlite3.connect(target_path)
+    conn = sqlite3.connect(target_path, timeout=10.0)
+    conn.execute("PRAGMA journal_mode = WAL;")
+    conn.execute("PRAGMA busy_timeout = 5000;")
     conn.execute("PRAGMA foreign_keys = ON;")
     conn.row_factory = sqlite3.Row
     return conn
@@ -82,11 +85,43 @@ def _migrate_columns_if_missing(conn: sqlite3.Connection) -> None:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN is_ai_generated INTEGER NOT NULL DEFAULT 1;")
 
     # Columns in 'ai_scores'
-    ai_score_cols = {row[1] for row in cursor.execute("PRAGMA table_info(ai_scores);").fetchall()}
+    ai_score_rows = cursor.execute("PRAGMA table_info(ai_scores);").fetchall()
+    ai_score_cols = {row[1] for row in ai_score_rows}
     if ai_score_cols and "evidence_location" not in ai_score_cols:
         cursor.execute("ALTER TABLE ai_scores ADD COLUMN evidence_location TEXT;")
     if ai_score_cols and "uncertainty" not in ai_score_cols:
         cursor.execute("ALTER TABLE ai_scores ADD COLUMN uncertainty TEXT;")
+
+    # Ensure ai_scores.score is nullable for missing evidence handling (notnull == 0)
+    ai_score_info = {row[1]: row for row in ai_score_rows}
+    if "score" in ai_score_info and ai_score_info["score"][3] == 1:
+        cursor.execute("PRAGMA foreign_keys = OFF;")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ai_scores_migration (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                evaluation_id INTEGER NOT NULL,
+                criterion_id INTEGER NOT NULL,
+                score REAL,
+                reasoning TEXT,
+                evidence_text TEXT,
+                evidence_location TEXT,
+                uncertainty TEXT,
+                model_name TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (evaluation_id) REFERENCES evaluations(id) ON DELETE CASCADE,
+                FOREIGN KEY (criterion_id) REFERENCES rubric_criteria(id) ON DELETE CASCADE,
+                UNIQUE(evaluation_id, criterion_id, model_name)
+            );
+        """)
+        cursor.execute("""
+            INSERT INTO ai_scores_migration (id, evaluation_id, criterion_id, score, reasoning, evidence_text, evidence_location, uncertainty, model_name, created_at, updated_at)
+            SELECT id, evaluation_id, criterion_id, score, reasoning, evidence_text, evidence_location, uncertainty, model_name, created_at, updated_at FROM ai_scores;
+        """)
+        cursor.execute("DROP TABLE ai_scores;")
+        cursor.execute("ALTER TABLE ai_scores_migration RENAME TO ai_scores;")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ai_scores_eval_id ON ai_scores(evaluation_id);")
+        cursor.execute("PRAGMA foreign_keys = ON;")
 
     conn.commit()
 
@@ -519,7 +554,7 @@ def save_ai_scores(
                 (
                     evaluation_id,
                     item["criterion_id"],
-                    float(item["score"]),
+                    float(item["score"]) if item.get("score") is not None else None,
                     item.get("reasoning", ""),
                     item.get("evidence_text", item.get("evidence_excerpt", "")),
                     item.get("evidence_location", ""),

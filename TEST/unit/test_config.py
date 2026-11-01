@@ -32,12 +32,17 @@ def test_settings_initialization() -> None:
     assert len(app_settings.SUPPORTED_MODELS) >= 3
     assert "gemini-3.5-flash-lite" in app_settings.SUPPORTED_MODELS
     assert app_settings.DEFAULT_MODEL == "gemini-3.5-flash-lite"
+    assert app_settings.uploads_dir.exists()
+    assert app_settings.access_password is not None
 
 
 def test_settings_security_repr() -> None:
-    """Verify __repr__ does not reveal raw API keys."""
+    """Verify __repr__ does not reveal raw API keys or passwords."""
     app_settings = Settings()
     repr_str = repr(app_settings)
     assert "Settings(" in repr_str
     assert "AIza" not in repr_str
+    # Verify password value is not displayed in plain text in repr
+    if app_settings.access_password:
+        assert app_settings.access_password not in repr_str
 

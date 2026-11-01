@@ -2,7 +2,7 @@
 
 **Product Title:** Human and AI Evaluation Comparison Tool  
 **Category:** AI Evaluation  
-**Current Status:** Production Verified (v1.0.0) — Live Gemini Tested & Headed Browser Validated  
+**Current Status:** Five-Person Prototype Ready — Concurrency Hardened (WAL Mode), Passkey Protected (`evallens2026`), & Live Gemini Verified  
 **Maintained by:** Implementation Agent (Antigravity)  
 **Product Owner & System Architect:** User  
 
@@ -16,9 +16,11 @@ The workflow begins by accepting submissions (documents, source code, or pasted 
 1. **Independent Human Scoring:** The evaluator scores each criterion with optional qualitative feedback.
 2. **Independence Guardrail:** AI scores, recommendations, and explanations remain strictly hidden from the evaluator until human scoring is finalized and submitted (enforced at both UI and backend query levels).
 3. **Optional Independent AI Scoring:** Gemini scores the original submission against the exact approved rubric criteria, providing justifications, cited evidence, and uncertainty notes without hallucinating criteria or facts.
-4. **Strict Score Validation:** AI scores exceeding maximum marks, negative scores, or invalid increments are strictly rejected (no silent clamping).
-5. **Approved Rubric Integrity:** Once human or AI scoring has commenced, the approved rubric criteria cannot be silently modified or overwritten.
-6. **Comparison Analytics & Dashboard:** The application computes normalized score differences, Mean Absolute Error (MAE), agreement percentages within a 10-percentage-point tolerance, signed directional bias, and Pearson correlation (with zero-variance safety), displaying side-by-side alignment in a clean Plotly chart and criterion-level drill-down table.
+4. **Missing Evidence vs Real Zero:** If the submission provides no evidence for a criterion, AI assigns `score: null` (with descriptive explanation), and the criterion is omitted from MAE and agreement rate calculations rather than being penalized as an artificial zero score.
+5. **Strict Score Validation:** AI scores exceeding maximum marks, negative scores, or invalid increments are strictly rejected (no silent clamping).
+6. **Approved Rubric Integrity:** Once human or AI scoring has commenced, the approved rubric criteria cannot be silently modified or overwritten.
+7. **Comparison Analytics & Dashboard:** The application computes normalized score differences, Mean Absolute Error (MAE), agreement percentages within a 10-percentage-point tolerance, signed directional bias, and Pearson correlation (with zero-variance safety), displaying side-by-side alignment in a clean Plotly chart and criterion-level drill-down table.
+8. **Five-Tester Prototype Workspace:** Access is protected by a lightweight passkey gate (`evallens2026`). All 5 testers share a common workspace with SQLite WAL concurrency and 5,000ms busy timeout, preventing database locking under concurrent use.
 
 ### Core Principle
 **AI assists the evaluation process; the human controls the final evaluation.** Human scores represent the authoritative evaluation; AI suggestions serve solely to support consistency and highlight potential oversights.
@@ -27,9 +29,9 @@ The workflow begins by accepting submissions (documents, source code, or pasted 
 
 ## 2. Current Development Phase
 
-- **Active Series:** Series 6 (Final Production-Level Verification, Live Gemini Integration, and Headed Browser Automation)
-- **Phase Goal:** Execute real headed Google Chrome browser verification via Playwright, test the application with a live Google Gemini API key, identify the cheapest working Gemini text model (`gemini-3.5-flash-lite`, \$0.30/1M in, \$2.50/1M out), verify all 15 supported formats through the live UI, test the realistic synthetic 1,338-word sample report end-to-end, capture 7 key milestone screenshots, discover and fix all implementation defects, and confirm zero regressions.
-- **Series 6 Status:** 100% Complete and Production-Verified (152 pytest tests passing in 0.91s; full Playwright headed browser suite passed with 0 console errors; all 7 milestone screenshots captured in `TEST/screenshots/`).
+- **Active Phase:** Five-Person Prototype Readiness & Multi-User Verification
+- **Phase Goal:** Prepare the existing application for testing by exactly five trusted human evaluators. Guarantee end-to-end workflow reliability, SQLite concurrency (WAL mode & busy timeout), lightweight access protection, transparent missing evidence handling, UI step progress indicators, deployment configuration (`0.0.0.0` and `$PORT`), and multi-user simulation testing.
+- **Phase Status:** 100% Complete and Accepted (157 pytest tests passing in 1.06s; full Playwright headed browser suite passed with 0 console errors; 5-user concurrent stress simulation passed with zero database lock errors; `TEST/prototype_acceptance_report.md` generated).
 
 ---
 
@@ -476,3 +478,112 @@ All tests executed via `.venv/bin/pytest -v`.
 - [x] 4 discovered defects fixed with automated regression tests.
 - [x] 152 automated pytest tests passing (100% pass rate in 0.91s).
 - [x] Production verification report generated at `TEST/production_verification_report.md`.
+
+### Series 7: Five-Person Prototype Readiness & Multi-User Verification
+- [x] Lightweight shared passkey gate implemented (`EVALLENS_ACCESS_PASSWORD`, default `evallens2026`).
+- [x] Shared prototype workspace notice prominently displayed (clarifying lack of individual data isolation).
+- [x] Session lock / sign out action provided in sidebar navigation.
+- [x] SQLite WAL (Write-Ahead Logging) mode and 5,000ms busy timeout enabled on all database connections.
+- [x] Schema updated for nullable `ai_scores.score REAL` to handle missing evidence without forcing zero scores.
+- [x] Automatic database migration implemented in `_migrate_columns_if_missing()` for legacy databases.
+- [x] Missing evidence excluded from MAE and agreement rate denominator.
+- [x] UI usability enhanced with visual step progress breadcrumb indicators across setup, review, evaluation, and comparison.
+- [x] Submission extraction summary card expanded by default (`expanded=True`) on the Review step.
+- [x] Deployment configuration created (`.streamlit/config.toml` binding to `0.0.0.0`, port 8501, `$PORT` support).
+- [x] Multi-user simulation test suite created (`test_five_user_simulation.py`) verifying sequential and concurrent access.
+- [x] Multi-threaded SQLite concurrency stress test passed (5 simultaneous worker threads, 0 lock errors).
+- [x] Full automated test suite expanded to 157 tests (100% pass rate in 1.06s).
+- [x] Headed browser test re-verified with live access password gate and persistence across reload.
+- [x] Comprehensive acceptance report generated at `TEST/prototype_acceptance_report.md`.
+
+---
+
+## 9. Five-Person Prototype Usage Instructions
+
+EvalLens is configured as a private evaluation prototype for five trusted human testers.
+
+### Tester Credentials & Access
+- **Access URL:** `http://localhost:8501` (or your private hosted URL)
+- **Shared Access Password:** `evallens2026` (configurable via `EVALLENS_ACCESS_PASSWORD` in `.env`)
+- **Shared Workspace Notice:** All evaluations, submitted documents, and rubrics are visible across all 5 testers. Please do not submit proprietary, classified, or sensitive personally identifiable information (PII).
+
+### Standard Evaluation Journey
+1. **Login:** Enter the shared prototype password `evallens2026` and click **Access Workspace**.
+2. **Setup Submission (`New Evaluation`):**
+   - Provide an Evaluation Title (e.g. *CS101 Final Project Review*).
+   - Select the Submission Type (*Written Work*, *Code*, *Software Project*, *Technical Report*, *Custom*).
+   - Upload one or more files (TXT, MD, PDF, DOCX, PY, CPP, H, HPP, JAVA, JS, TS, JSON, HTML, CSS, SQL) or paste text directly. Total submission must not exceed 5,000 words.
+   - Click **Analyze Submission with Gemini** (or **Create Rubric Manually** if evaluating without AI).
+3. **Review & Refine Rubric:**
+   - Review the proposed criteria, descriptions, and evidence citations.
+   - Edit criteria names, descriptions, or maximum marks as needed.
+   - Click **Approve Rubric & Save Evaluation**.
+4. **Human Evaluation (`Evaluate`):**
+   - Score each criterion between 0.0 and the criterion maximum using 0.5 increments.
+   - Enter optional feedback or qualitative notes.
+   - Click **Submit Human Evaluation** (or **Save Progress** as draft).
+   - *Independence Notice:* AI suggestions remain strictly locked and invisible until you click Submit.
+5. **Independent AI Evaluation:**
+   - Once human evaluation is submitted, click **Run AI Evaluation with Gemini**.
+   - Gemini evaluates the submission against the approved criteria in approximately 3 to 8 seconds.
+6. **Inspect Comparison Dashboard:**
+   - View side-by-side Plotly bar chart comparing Human vs. AI scores per criterion.
+   - Inspect summary metrics: Human Total, AI Suggestion, Directional Bias (pts), MAE (%), and Agreement Rate (%).
+   - Expand criterion alignment cards to read AI reasoning, quoted evidence excerpts, and uncertainty notes.
+7. **Review Past Sessions (`Evaluation History`):**
+   - View past evaluations, access rubrics, and inspect comparison states at any time.
+
+---
+
+## 10. Deployment and Recovery Instructions
+
+### Local Execution
+```bash
+# 1. Activate virtual environment
+source .venv/bin/activate
+
+# 2. Verify dependencies
+pip install -r requirements.txt
+
+# 3. Ensure .env contains your configuration
+# GEMINI_API_KEY=your_key_here
+# EVALLENS_ACCESS_PASSWORD=evallens2026
+
+# 4. Launch Streamlit
+streamlit run app.py
+```
+
+### Hosting on Render (Web Service)
+1. **Repository:** Connect the EvalLens Git repository to Render.
+2. **Environment:** Select **Python 3**.
+3. **Build Command:**
+   ```bash
+   pip install --upgrade pip && pip install -r requirements.txt
+   ```
+4. **Start Command:**
+   ```bash
+   streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
+   ```
+5. **Environment Variables on Render:**
+   - `GEMINI_API_KEY`: Your Google Gemini API key.
+   - `EVALLENS_ACCESS_PASSWORD`: Set your private 5-person passkey (e.g. `evallens2026`).
+   - `DB_PATH`: `/var/data/evallens.db` (if using Render Persistent Disks).
+   - `UPLOADS_PATH`: `/var/data/uploads` (if using Render Persistent Disks).
+6. **Persistent Disk (Recommended on Render):**
+   - Mount a Render Persistent Disk at `/var/data` (size: 1 GB is ample for 5 testers).
+   - This ensures SQLite database records and uploaded files survive service restarts and deploys.
+7. **Disaster Recovery:**
+   - SQLite backups can be performed while running using the SQLite online backup API or simply copying the DB file while WAL mode handles active transactions:
+     ```bash
+     sqlite3 /var/data/evallens.db ".backup /var/data/evallens_backup.db"
+     ```
+
+---
+
+## 11. Known Limitations, Risks, and Remaining Bugs
+
+1. **Shared Workspace Nature (No User Isolation):** All 5 testers operate within a single shared database. There is no multi-tenant isolation or personal user account dashboard. Testers can view and edit each other's evaluations.
+2. **Disk Persistence on Ephemeral Platforms:** If deployed on Render or Heroku without a persistent disk mount, the local SQLite database and uploads directory reset to default upon service redeploy. Mount a persistent disk at `/var/data` as documented above.
+3. **Scanned / Image-Only PDFs:** The prototype parses textual PDF streams (`pypdf`). Image-only scanned PDFs return an informative warning advising the user to paste text or provide a digital document. OCR is explicitly out of scope for this prototype.
+4. **Internet Dependency for AI Inference:** Criteria generation and AI evaluation require an outbound connection to `generativelanguage.googleapis.com`. Human scoring and comparison viewing functions completely offline without internet.
+5. **No Absolute Ground Truth:** The tool measures alignment and divergence between human evaluators and AI rubric suggestions; it does not claim to establish an absolute objective truth.

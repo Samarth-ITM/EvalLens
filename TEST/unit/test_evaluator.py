@@ -110,6 +110,44 @@ def test_parse_and_validate_ai_response_valid() -> None:
     assert scores[1]["score"] == 4.0
 
 
+def test_parse_ai_response_allows_none_score_for_missing_evidence() -> None:
+    """Verify that if Gemini returns null for score due to missing evidence, it is accepted as None."""
+    criteria = [
+        {"id": 1, "name": "Documentation", "max_score": 5.0},
+        {"id": 2, "name": "Test Suite", "max_score": 5.0},
+    ]
+    raw_json = json.dumps(
+        {
+            "scores": [
+                {
+                    "criterion_id": 1,
+                    "criterion_name": "Documentation",
+                    "score": 4.5,
+                    "max_marks": 5.0,
+                    "reasoning": "Well-documented README.",
+                    "evidence_text": "README section",
+                },
+                {
+                    "criterion_id": 2,
+                    "criterion_name": "Test Suite",
+                    "score": None,  # Missing evidence
+                    "max_marks": 5.0,
+                    "reasoning": "No test cases or test files found in submission.",
+                    "evidence_text": "Missing evidence in submission.",
+                    "uncertainty": "Cannot grade without test scripts.",
+                },
+            ],
+            "overall_reasoning": "Partial evaluation completed.",
+        }
+    )
+
+    scores = parse_and_validate_ai_response(raw_json, criteria, "gemini-3.5-flash-lite")
+    assert len(scores) == 2
+    assert scores[0]["score"] == 4.5
+    assert scores[1]["score"] is None
+    assert "Missing evidence" in scores[1]["evidence_text"]
+
+
 def test_parse_ai_response_rejects_exceeding_scores() -> None:
     """Verify that if Gemini returns a score exceeding criterion maximum, it is strictly rejected."""
     criteria = [{"id": 1, "name": "Security", "max_score": 5.0}]

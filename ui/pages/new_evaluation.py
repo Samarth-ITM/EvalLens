@@ -79,6 +79,7 @@ def render_new_evaluation_page() -> None:
 
 def render_setup_step() -> None:
     """Render the submission input form with live word counting and validation."""
+    st.caption("📍 **Progress:** `Step 1 of 3: Setup & Submission` ➔ Step 2: Criteria Review ➔ Step 3: Rubric Approval")
     st.write(
         "Submit student or candidate work, select the evaluation type, and generate or create "
         "custom evaluation criteria."
@@ -258,6 +259,7 @@ def render_review_step() -> None:
         st.rerun()
         return
 
+    st.caption("📍 **Progress:** Step 1: Setup ➔ `Step 2 of 3: Criteria Review & Editing` ➔ Step 3: Rubric Approval")
     # Header and Summary Banner
     st.markdown(f"### Review & Edit Rubric: *{prepared.title}*")
     st.write(
@@ -266,7 +268,7 @@ def render_review_step() -> None:
     )
 
     # Submission Metadata Card
-    with st.expander("Submission Details & Extraction Summary", expanded=False):
+    with st.expander("Submission Details & Extraction Summary", expanded=True):
         st.write(f"**Submission Type:** {prepared.submission_type}")
         st.write(f"**Total Word Count:** {prepared.total_words:,} words (Limit: 5,000 words)")
         st.write(f"**Files Included:** {len(prepared.documents)}")
@@ -451,6 +453,7 @@ def render_approved_step() -> None:
     eval_id = st.session_state.get("approved_eval_id")
     rubric: EditableRubric = st.session_state.get("editable_rubric")
 
+    st.caption("📍 **Progress:** Step 1: Setup ➔ Step 2: Criteria Review ➔ `Step 3 of 3: Rubric Approved ✅`")
     st.success("🎉 Rubric Approved and Saved Successfully!")
     st.write(
         f"Evaluation **#{eval_id}** is now established with an approved rubric and ready "

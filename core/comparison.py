@@ -217,6 +217,10 @@ def calculate_comparison(
             )
         else:
             # Human-only or missing AI score for this criterion
+            a_reasoning = ai_data.get("reasoning", "") if ai_data else ""
+            a_evidence = ai_data.get("evidence_text", ai_data.get("evidence_excerpt", "")) if ai_data else ""
+            a_location = ai_data.get("evidence_location", "") if ai_data else ""
+            a_uncertainty = ai_data.get("uncertainty", "") if ai_data else ""
             criteria_comparisons.append(
                 CriterionComparison(
                     criterion_id=c_id,
@@ -225,6 +229,10 @@ def calculate_comparison(
                     human_score=h_score,
                     human_feedback=h_feedback,
                     ai_score=None,
+                    ai_reasoning=a_reasoning,
+                    ai_evidence_excerpt=a_evidence,
+                    ai_evidence_location=a_location,
+                    ai_uncertainty=a_uncertainty,
                     human_normalized=h_norm,
                     ai_normalized=None,
                     absolute_difference=None,

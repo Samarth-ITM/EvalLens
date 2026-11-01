@@ -564,3 +564,73 @@ Extremely High. The application is completely functional, stable, and determinis
 
 ### Confidence Assessment
 Production Ready. The prototype has been verified through real user interface execution in Google Chrome with live Google Gemini API calls. All 15 formats parse reliably, independence guardrails are strictly enforced, comparison metrics are mathematically exact, and 152 automated tests pass with 100% success.
+
+
+---
+
+## Entry 7: 2026-11-01 — Series 7: Five-Person Prototype Readiness & Multi-User Verification
+
+### Objectives
+1. Prepare the existing EvalLens application for testing by exactly five trusted human evaluators without enterprise SaaS overhead.
+2. Implement a simple shared passkey gate (`EVALLENS_ACCESS_PASSWORD`, default `evallens2026`) preventing unrestricted web access while keeping the entire evaluation workflow unchanged after access is granted.
+3. Clearly disclose to testers that this is a shared evaluation workspace and evaluations are visible across all five testers.
+4. Eliminate multi-user database concurrency bottlenecks: configure SQLite in WAL (Write-Ahead Logging) mode with a 5,000ms busy timeout to prevent `database is locked` errors under simultaneous usage.
+5. Fix missing evidence score handling: ensure `ai_scores.score` is nullable so that when Gemini encounters ungradable criteria or missing evidence, `score: null` is recorded rather than artificially forcing a `0.0` score that distorts the MAE.
+6. Enhance UI usability and navigation: add step progress breadcrumbs across setup, review, evaluation, and comparison; expand submission extraction details by default; clarify dashboard metrics.
+7. Configure deployment artifacts for hosted testing (`.streamlit/config.toml` binding to `0.0.0.0`, port 8501, and dynamic `$PORT` support; persistent disk support for `DB_PATH` and `UPLOADS_PATH`).
+8. Implement a dedicated 5-user sequential and concurrent usage simulation test suite (`TEST/integration/test_five_user_simulation.py`).
+9. Execute full verification across unit tests, multi-threaded concurrency stress tests, and real headed Google Chrome browser testing.
+10. Generate the master acceptance report at `TEST/prototype_acceptance_report.md`.
+
+### Implementation Details & Changes Made
+1. **Lightweight Access Passkey Gate (`config/settings.py` & `app.py`):**
+   - Added `self.access_password` to `Settings`, configurable via `EVALLENS_ACCESS_PASSWORD` (default `evallens2026`).
+   - Integrated access challenge in `app.py`: unauthenticated sessions are halted with an informative gate detailing the shared 5-tester workspace nature.
+   - Preserved all session state and page routing once authenticated (`st.session_state["authenticated"] = True`).
+   - Added a "Lock / Sign Out" button in the sidebar.
+2. **SQLite Multi-User Concurrency Hardening (`database/db.py`):**
+   - Configured `get_connection()` with `timeout=10.0`, `PRAGMA journal_mode = WAL;`, and `PRAGMA busy_timeout = 5000;`.
+   - WAL mode permits multiple concurrent readers while serialized writes are queued safely without throwing `sqlite3.OperationalError: database is locked`.
+3. **Missing Evidence vs Real Zero Score Handling (`database/schema.sql`, `database/db.py`, `core/validators.py`, `core/evaluator.py`, `core/comparison.py`, `ui/pages/evaluate.py`):**
+   - Changed `ai_scores.score REAL` in `schema.sql` to nullable (removed `NOT NULL`).
+   - Added automatic SQLite table migration in `_migrate_columns_if_missing()` to recreate older tables having `notnull == 1` into nullable tables without data loss.
+   - Updated `AICriterionScoreResult.score` in `core/validators.py` to `Optional[float] = Field(default=None, ge=0.0)`.
+   - Updated `build_ai_scoring_prompt` in `core/evaluator.py` instructing Gemini to assign `score: null` and cite `"Missing evidence in submission."` when evidence is insufficient, reserving `0.0` strictly for attempted and failed criteria.
+   - Updated `save_ai_scores` in `database/db.py` to persist `None` as SQL `NULL`.
+   - Updated `calculate_comparison` in `core/comparison.py` to populate AI reasoning and evidence text while keeping `ai_score: None`, correctly excluding ungradable criteria from the MAE and agreement rate denominator.
+   - Updated `ui/pages/evaluate.py` to sum AI scores handling `None` (`r["score"] is not None`), display `N/A (Missing evidence)` in drill-down cards, and render missing bars cleanly in Plotly.
+4. **UI Usability Polish (`ui/pages/new_evaluation.py` & `ui/pages/evaluate.py`):**
+   - Added step breadcrumb banners: `Step 1 of 3: Setup & Submission ➔ Step 2: Criteria Review ➔ Step 3: Rubric Approval` in `new_evaluation.py`.
+   - Added workflow progress indicators: `1. Human Scoring ➔ 2. Optional AI Evaluation ➔ 3. Comparison Dashboard` in `evaluate.py`.
+   - Expanded the submission details and extraction summary card by default (`expanded=True`) on the Review step.
+   - Added plain-language tooltip explanations for Directional Bias, MAE, Agreement Rate, and Pearson correlation.
+5. **Deployment Configuration (`.streamlit/config.toml` & `config/settings.py`):**
+   - Created `.streamlit/config.toml` configuring `headless = true`, `address = "0.0.0.0"`, `port = 8501`, `maxUploadSize = 10`, and theme colors.
+   - Added `UPLOADS_PATH` environment variable support in `config/settings.py` to pair with `DB_PATH` when mounting persistent storage on cloud platforms like Render (`/var/data`).
+
+### Test Strategy & Files Created / Modified
+- Created `TEST/integration/test_five_user_simulation.py`:
+  - `test_five_user_sequential_and_concurrent_workflow`: Verifies 5 users performing interleaved actions (User 1 creates essay eval, User 2 edits/approves rubric, User 3 scores human, User 4 creates code eval and scores, User 5 runs AI scoring with missing evidence).
+  - `test_five_user_concurrent_sqlite_wal_stress`: 5 simultaneous threads performing concurrent inserts/selects on SQLite under WAL mode.
+- Modified `TEST/unit/test_config.py`: Added assertions verifying `uploads_dir`, `access_password`, and password masking in `__repr__`.
+- Modified `TEST/unit/test_evaluator.py`: Added `test_parse_ai_response_allows_none_score_for_missing_evidence()`.
+- Modified `TEST/integration/test_database.py`: Added `test_wal_mode_and_busy_timeout()` and `test_ai_scores_score_is_nullable()`.
+- Modified `TEST/integration/test_headed_browser.py`: Updated Playwright automation to authenticate via the access passkey gate both on initial page load and after page reload.
+- Created `TEST/prototype_acceptance_report.md`: Formal verification report covering all 9 requirement sections.
+
+### Actual Test Results
+- **Automated Pytest Suite:** **157 passed in 1.06s** (157 passed, 0 failed, 0 errors).
+- **Five-User Simulation Suite:** Both sequential multi-user flow and 5-thread concurrent WAL stress passed with zero database locking errors.
+- **Headed Chrome Browser Automation:** **PASSED** (0 console errors, 0 page errors, all 15 formats verified, sample report evaluated, criteria generated in 3.86s, AI scored in 8.05s, history persisted).
+
+### Defects Discovered & Root Cause Analysis
+1. **Missing Evidence Penalized as Zero Score:**
+   - *Cause:* `ai_scores.score` was constrained to `NOT NULL` in `schema.sql`, and `AICriterionScoreResult` enforced `score: float >= 0.0`. When a document lacked evidence for a criterion, the AI was forced to assign `0.0`, artificially inflating MAE.
+   - *Fix:* Made `ai_scores.score` nullable in SQLite and Pydantic models; updated scoring prompt and comparison calculation to treat missing evidence as `score: null` and omit it from MAE.
+2. **Missing Input Key in Test Simulation:**
+   - *Cause:* `submit_human_evaluation` expects `max_marks` in each score item; initial simulation script omitted it.
+   - *Fix:* Passed `max_marks: crit["max_score"]` in score dictionaries.
+
+### Confidence Assessment
+Ready for Five-Tester Evaluation. Concurrency stability is confirmed under multi-threaded stress, access is protected, evidence grounding and missing score handling are mathematically consistent, and 157 automated tests pass with 100% success.
+

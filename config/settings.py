@@ -57,6 +57,20 @@ class Settings:
         else:
             self.db_path = self.DEFAULT_DB_PATH
 
+        custom_uploads = os.getenv("UPLOADS_PATH")
+        if custom_uploads:
+            custom_u_path = Path(custom_uploads)
+            self.uploads_dir = custom_u_path if custom_u_path.is_absolute() else (BASE_DIR / custom_u_path)
+        else:
+            self.uploads_dir = UPLOADS_DIR
+        self.uploads_dir.mkdir(parents=True, exist_ok=True)
+
+        # Basic access password for private 5-person prototype
+        raw_pwd = os.getenv("EVALLENS_ACCESS_PASSWORD", "evallens2026").strip()
+        self.access_password: Optional[str] = (
+            None if raw_pwd.lower() in ("", "none", "disable", "disabled", "false") else raw_pwd
+        )
+
         # Optional environment fallback for Gemini API key
         self._env_gemini_api_key: Optional[str] = (
             os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip() or None
@@ -81,6 +95,8 @@ class Settings:
         # Mask any sensitive details in string representation
         return (
             f"Settings(env={self.env!r}, db_path={str(self.db_path)!r}, "
+            f"uploads_dir={str(self.uploads_dir)!r}, "
+            f"has_access_password={bool(self.access_password)}, "
             f"has_env_api_key={bool(self._env_gemini_api_key)})"
         )
 

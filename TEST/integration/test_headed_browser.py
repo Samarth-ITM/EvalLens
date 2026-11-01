@@ -131,6 +131,16 @@ def run_headed_browser_test() -> Dict[str, any]:
             # Initial Navigation
             print(">>> Navigating to", BASE_URL)
             page.goto(BASE_URL)
+            page.wait_for_timeout(1000)
+
+            # Handle 5-Person Prototype Access Password if enabled
+            pwd_input = page.locator('input[type="password"]')
+            if pwd_input.is_visible():
+                print(">>> Entering prototype access password...")
+                pwd_input.fill("evallens2026")
+                page.locator('button:has-text("Access Workspace")').click()
+                page.wait_for_timeout(1500)
+
             page.wait_for_selector("section[data-testid=\"stSidebar\"]", timeout=15000)
             page.wait_for_timeout(1000)
 
@@ -348,6 +358,14 @@ def run_headed_browser_test() -> Dict[str, any]:
             # 9. Persistence Check (Reload)
             print("  Testing page reload persistence...")
             page.reload()
+            page.wait_for_timeout(1000)
+            pwd_reload = page.locator('input[type="password"]')
+            if pwd_reload.is_visible():
+                print("  Re-entering prototype access password after reload...")
+                pwd_reload.fill("evallens2026")
+                page.locator('button:has-text("Access Workspace")').click()
+                page.wait_for_timeout(1500)
+
             page.wait_for_selector("section[data-testid=\"stSidebar\"]", timeout=15000)
             page.locator("section[data-testid=\"stSidebar\"] label:has-text(\"Evaluation History\")").click()
             page.wait_for_selector("text=Evaluation History", timeout=15000)

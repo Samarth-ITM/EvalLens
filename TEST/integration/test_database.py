@@ -95,3 +95,29 @@ def test_parameterized_query_and_foreign_keys(test_db_path: Path) -> None:
             db_path=test_db_path,
         )
 
+
+def test_wal_mode_and_busy_timeout(test_db_path: Path) -> None:
+    """Verify SQLite WAL mode and busy timeout are active for 5-user concurrency."""
+    init_db(test_db_path)
+    from database.db import get_connection
+
+    with get_connection(test_db_path) as conn:
+        journal_mode = conn.execute("PRAGMA journal_mode;").fetchone()[0]
+        # In SQLite, WAL mode is returned in lowercase or uppercase
+        assert journal_mode.lower() in ("wal", "memory")
+
+        busy_timeout = conn.execute("PRAGMA busy_timeout;").fetchone()[0]
+        assert busy_timeout >= 5000
+
+
+def test_ai_scores_score_is_nullable(test_db_path: Path) -> None:
+    """Verify that ai_scores.score column is nullable to allow missing evidence."""
+    init_db(test_db_path)
+    from database.db import get_connection
+
+    with get_connection(test_db_path) as conn:
+        cols = {row[1]: row for row in conn.execute("PRAGMA table_info(ai_scores);").fetchall()}
+        assert "score" in cols
+        # cols["score"][3] is the 'notnull' flag: 0 means nullable, 1 means NOT NULL
+        assert cols["score"][3] == 0
+

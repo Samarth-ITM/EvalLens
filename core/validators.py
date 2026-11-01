@@ -137,7 +137,7 @@ class AICriterionScoreResult(BaseModel):
 
     criterion_id: int = Field(..., ge=1)
     criterion_name: str = Field(...)
-    score: float = Field(..., ge=0.0)
+    score: Optional[float] = Field(default=None, ge=0.0)
     max_marks: float = Field(..., gt=0.0)
     reasoning: str = Field(..., min_length=1)
     evidence_text: Optional[str] = Field(default="")

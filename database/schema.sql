@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS ai_scores (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evaluation_id INTEGER NOT NULL,
     criterion_id INTEGER NOT NULL,
-    score REAL NOT NULL,
+    score REAL, -- Nullable to allow missing evidence without forcing a 0.0 score
     reasoning TEXT,
     evidence_text TEXT,
     evidence_location TEXT,

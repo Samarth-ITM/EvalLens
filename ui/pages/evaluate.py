@@ -109,6 +109,14 @@ def render_evaluate_page() -> None:
     is_human_done = has_human_scores(selected_eval_id)
     is_ai_done = has_ai_scores(selected_eval_id)
 
+    # Workflow progress breadcrumb
+    if not is_human_done:
+        st.caption("📍 **Progress:** `1. Human Scoring (In Progress)` ➔ 2. Optional AI Evaluation ➔ 3. Comparison Dashboard")
+    elif not is_ai_done:
+        st.caption("📍 **Progress:** 1. Human Scoring (Completed ✅) ➔ `2. Optional AI Evaluation (Ready)` ➔ 3. Comparison Dashboard")
+    else:
+        st.caption("📍 **Progress:** 1. Human Scoring (Completed ✅) ➔ 2. AI Evaluation (Completed ✅) ➔ `3. Comparison Dashboard Active 📊`")
+
     st.markdown("---")
 
     # ------------------------------------------------------------------
@@ -247,7 +255,7 @@ def render_evaluate_page() -> None:
     else:
         if is_ai_done:
             ai_rows = get_ai_scores(selected_eval_id)
-            ai_total = sum(float(r["score"]) for r in ai_rows)
+            ai_total = sum(float(r["score"]) for r in ai_rows if r["score"] is not None)
             max_total = float(rubric["total_marks"])
             ai_pct = round((ai_total / max_total) * 100.0, 1) if max_total > 0 else 0.0
             model_used = ai_rows[0]["model_name"] if ai_rows else "Gemini"
@@ -326,7 +334,7 @@ def render_evaluate_page() -> None:
             st.markdown("#### Score Comparison per Criterion")
             crit_names = [c.criterion_name for c in comparison.criteria_comparisons]
             h_scores = [c.human_score for c in comparison.criteria_comparisons]
-            a_scores = [c.ai_score or 0.0 for c in comparison.criteria_comparisons]
+            a_scores = [c.ai_score if c.ai_score is not None else None for c in comparison.criteria_comparisons]
             max_scores = [c.max_marks for c in comparison.criteria_comparisons]
 
             fig = go.Figure()
@@ -356,9 +364,17 @@ def render_evaluate_page() -> None:
             # Detailed Comparison Table
             st.markdown("#### Criterion-Level Alignment Breakdown")
             for c in comparison.criteria_comparisons:
-                disagree_badge = "⚠️ Disagreement (>10% diff)" if c.significant_disagreement else "✅ Agreement"
+                if c.ai_score is not None:
+                    ai_score_str = f"`{c.ai_score} / {c.max_marks}` ({c.ai_normalized}%)"
+                    disagree_badge = "⚠️ Disagreement (>10% diff)" if c.significant_disagreement else "✅ Agreement"
+                    diff_caption = f"Absolute Diff: {c.absolute_difference} marks | Normalized Diff: {c.normalized_difference}%"
+                else:
+                    ai_score_str = "`N/A (Missing evidence)`"
+                    disagree_badge = "ℹ️ Missing Evidence"
+                    diff_caption = "Excluded from MAE and Agreement metrics due to missing evidence."
+
                 with st.expander(
-                    f"{c.criterion_name}: Human `{c.human_score}` vs AI `{c.ai_score}` ({disagree_badge})"
+                    f"{c.criterion_name}: Human `{c.human_score}` vs AI `{'N/A' if c.ai_score is None else c.ai_score}` ({disagree_badge})"
                 ):
                     col_det1, col_det2 = st.columns(2)
                     with col_det1:
@@ -369,7 +385,7 @@ def render_evaluate_page() -> None:
                             st.caption("No specific remarks provided.")
 
                     with col_det2:
-                        st.markdown(f"**AI Suggestion:** `{c.ai_score} / {c.max_marks}` ({c.ai_normalized}%)")
+                        st.markdown(f"**AI Suggestion:** {ai_score_str}")
                         if c.ai_reasoning:
                             st.write(f"*Reasoning:* {c.ai_reasoning}")
                         if c.ai_evidence_excerpt:
@@ -378,9 +394,7 @@ def render_evaluate_page() -> None:
                         if c.ai_uncertainty:
                             st.caption(f"*Uncertainty / Limitations:* {c.ai_uncertainty}")
 
-                    st.caption(
-                        f"Absolute Diff: {c.absolute_difference} marks | Normalized Diff: {c.normalized_difference}%"
-                    )
+                    st.caption(diff_caption)
 
             st.caption(
                 "**Note on interpretation:** AI scores are independent suggestions to assist consistency. "

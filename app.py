@@ -46,6 +46,41 @@ def main() -> None:
     # Load custom styles
     apply_custom_styles()
 
+    # Basic Access Gate for 5-Person Prototype
+    if settings.access_password and not st.session_state.get("authenticated", False):
+        st.markdown(
+            """
+            <div style="text-align: center; margin-top: 2rem; margin-bottom: 2rem;">
+                <h1 style="color: #1e3a8a; margin-bottom: 0.25rem;">⚖️ EvalLens</h1>
+                <p style="color: #64748b; font-size: 1.1rem;">Human and AI Evaluation Comparison Tool</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        col_left, col_mid, col_right = st.columns([1, 2, 1])
+        with col_mid:
+            st.info(
+                "🔒 **Private 5-Person Testing Prototype**\n\n"
+                "Welcome to the EvalLens testing workspace. This environment is shared among exactly 5 trusted testers. "
+                "Evaluations, submissions, and rubrics are visible across testers in this shared workspace. "
+                "Please do not submit confidential or sensitive personal information."
+            )
+
+            with st.form("access_gate_form"):
+                pwd_input = st.text_input("Access Password", type="password", placeholder="Enter prototype password...")
+                submit_btn = st.form_submit_button("Access Workspace", type="primary", use_container_width=True)
+
+                if submit_btn:
+                    if pwd_input.strip() == settings.access_password:
+                        st.session_state["authenticated"] = True
+                        st.success("Access granted!")
+                        st.rerun()
+                    else:
+                        st.error("Incorrect password. Please contact the prototype administrator.")
+
+        st.stop()
+
     # Navigation setup
     nav_options = ["Home", "New Evaluation", "Evaluate", "Evaluation History", "Settings"]
 
@@ -67,6 +102,17 @@ def main() -> None:
     st.session_state["active_nav"] = selected_nav
 
     st.sidebar.markdown("---")
+    if settings.access_password:
+        st.sidebar.markdown(
+            "🔒 **Tester Workspace**  \n"
+            "<small style='color: #64748b;'>Shared environment for 5 testers</small>",
+            unsafe_allow_html=True,
+        )
+        if st.sidebar.button("Lock / Sign Out", use_container_width=True):
+            st.session_state["authenticated"] = False
+            st.rerun()
+        st.sidebar.markdown("---")
+
     st.sidebar.caption(
         f"**EvalLens v1.0.0**\n\n"
         "Human and AI Evaluation Comparison Tool\n\n"
