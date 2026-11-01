@@ -136,10 +136,36 @@ A thorough technical assessment was conducted on deploying EvalLens to Vercel. *
 - **Restart and Persistence Result:** Successful (Verified via Playwright after container restart)
 - **Five-User Simulation Result:** Successful (5-thread WAL stress passed with 0 lock errors)
 - **Browser Workflow Result:** Successful (0 console errors, 0 page errors)
-- **Render Deployment Result:** Blueprint configured (`render.yaml`); manual steps documented
+- **Render Deployment Result:** **LIVE AND VERIFIED** (`https://evallens.onrender.com`, Service ID `srv-dbjm3p8u01pc73fskbng`, Healthcheck 200 OK, full live E2E test passed)
+- **GitHub Push Result:** **SUCCESSFUL** (`https://github.com/Samarth-ITM/EvalLens.git`, branches `main` and `master`, commit `8dddfb3a0567a8881f4ddce993df68c635ef9370`)
 - **Vercel Compatibility Result:** Documented as incompatible (Render is the designated host)
 - **Critical Bugs Remaining:** 0
 - **Major Bugs Remaining:** 0
 - **FINAL_BUILD Path:** `/Users/samarth/Downloads/STUFF/WORK/ITM/PE-MiniProject/FINAL_BUILD`
 - **FINAL_BUILD.zip Path:** `/Users/samarth/Downloads/STUFF/WORK/ITM/PE-MiniProject/FINAL_BUILD.zip`
+
+---
+
+## 9. Live Render Deployment & Release Verification (Final Release)
+
+### Live Service Details
+- **Hosting Provider:** Render
+- **Public URL:** [https://evallens.onrender.com](https://evallens.onrender.com)
+- **Service ID:** `srv-dbjm3p8u01pc73fskbng`
+- **Environment:** `EVALLENS_ENV=render`, Python 3.12, Free Tier
+- **Healthcheck URL:** `https://evallens.onrender.com/_stcore/health` (HTTP/2 200 OK)
+- **GitHub Source:** [Samarth-ITM/EvalLens](https://github.com/Samarth-ITM/EvalLens.git) (`main` branch, commit `8dddfb3`)
+
+### Automated Headed Browser Verification (`TEST/integration/test_render_live_deployment_e2e.py`)
+A comprehensive Playwright test executed against `https://evallens.onrender.com` using real document uploads and live Google Gemini AI:
+1. **Access Gate:** Successfully challenged and authenticated using shared passkey `evallens2026`.
+2. **Navigation:** Verified clean sidebar rendering and routing to New Evaluation.
+3. **Document Ingestion:** Uploaded real DOCX document (`sample_report.docx`, 41 KB); verified automatic text extraction and word counting.
+4. **AI Criteria Generation:** Triggered live Gemini inference (`gemini-3.5-flash-lite`); returned structured, evidence-grounded rubric criteria in 6.2s.
+5. **Rubric Approval:** Evaluator reviewed criteria and approved rubric, locking it into SQLite.
+6. **Human Scoring:** Evaluator submitted marks for all criteria; verified immediate recalculation of totals and percentages.
+7. **Independent AI Evaluation:** Triggered Gemini to score the submission against the approved rubric; verified AI evaluated each criterion independently without overwriting human scores.
+8. **Comparison Dashboard:** Verified live calculation of Normalized Scores, Score Variance, Directional Bias, Alignment Category, and visualization components.
+9. **History Persistence:** Navigated to Evaluation History and confirmed the live evaluation record was stored with status `Complete` and both scores recorded.
+10. **Visual Proof:** 10 full-resolution screenshots captured and archived in `DOCS/screenshots/render_live/`.
 

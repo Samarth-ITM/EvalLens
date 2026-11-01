@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: evallens
+    env: python
+    rootDir: FINAL_BUILD
+    region: oregon
+    plan: starter # Starter plan required for persistent disk support on Render
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: EVALLENS_ENV
+        value: render
+      - key: EVALLENS_ACCESS_PASSWORD
+        sync: false # Set securely in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false # Set securely in Render dashboard
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: DB_PATH
+        value: /var/data/evallens.db
+      - key: UPLOADS_PATH
+        value: /var/data/uploads
+    disk:
+      name: evallens-storage
+      mountPath: /var/data
+      sizeGB: 1
