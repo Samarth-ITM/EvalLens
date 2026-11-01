@@ -26,7 +26,7 @@ from core.document_parser import (
 )
 from core.rubric import EditableCriterion, EditableRubric, approve_rubric, record_ai_proposal
 from core.submission import PreparedSubmission, prepare_submission, save_submission_to_db
-from core.validators import ALLOWED_SUBMISSION_TYPES
+from core.validators import ALLOWED_SUBMISSION_TYPES, CriteriaProposalResponse, CriterionProposal
 
 
 def reset_workflow() -> None:
@@ -35,6 +35,7 @@ def reset_workflow() -> None:
     st.session_state["prepared_submission"] = None
     st.session_state["uploaded_files_data"] = []
     st.session_state["editable_rubric"] = None
+    st.session_state["last_ai_proposal"] = None
     st.session_state["ai_limitation_note"] = None
     st.session_state["approved_eval_id"] = None
 
@@ -49,6 +50,8 @@ def init_state() -> None:
         st.session_state["uploaded_files_data"] = []
     if "editable_rubric" not in st.session_state:
         st.session_state["editable_rubric"] = None
+    if "last_ai_proposal" not in st.session_state:
+        st.session_state["last_ai_proposal"] = None
     if "ai_limitation_note" not in st.session_state:
         st.session_state["ai_limitation_note"] = None
     if "approved_eval_id" not in st.session_state:
@@ -182,7 +185,7 @@ def render_setup_step() -> None:
 
         # If User chose AI Criteria Generation
         if submit_with_ai:
-            api_key = st.session_state.get("gemini_api_key", settings.env_gemini_api_key)
+            api_key = st.session_state.get("gemini_api_key") or settings.env_gemini_api_key
             if not api_key:
                 st.warning(
                     "No Gemini API key configured. You can add your API key in **Settings → AI Configuration**, "
@@ -209,6 +212,7 @@ def render_setup_step() -> None:
                         description=f"Generated using {selected_model} ({prepared.prompt_version})",
                     )
                     st.session_state["editable_rubric"] = editable
+                    st.session_state["last_ai_proposal"] = proposal
                     st.session_state["ai_limitation_note"] = proposal.limitation_note
                     st.session_state["eval_step"] = "review"
                     st.rerun()

@@ -2,7 +2,7 @@
 
 **Product Title:** Human and AI Evaluation Comparison Tool  
 **Category:** AI Evaluation  
-**Current Status:** Series 5 Complete — Prototype Stabilized & Verified (v1.0.0)  
+**Current Status:** Production Verified (v1.0.0) — Live Gemini Tested & Headed Browser Validated  
 **Maintained by:** Implementation Agent (Antigravity)  
 **Product Owner & System Architect:** User  
 
@@ -27,9 +27,9 @@ The workflow begins by accepting submissions (documents, source code, or pasted 
 
 ## 2. Current Development Phase
 
-- **Active Series:** Series 5 of 5 (Prototype Stabilization, Testing and Final Verification)
-- **Phase Goal:** Stabilize the prototype, eliminate existing defects, verify that all 15 supported document formats parse and integrate cleanly, create and evaluate a realistic 1,338-word technical report fixture (`TEST/fixtures/sample_report.md` & `.docx`), verify full end-to-end evaluation and comparison workflows, test failure boundaries (submission, API, database, security), verify human-only execution mode without an API key, and document comprehensive verification in `TEST/sample_test_report.md`.
-- **Series 5 Status:** Complete, verified, and stabilized (150 tests passing, 0 failures).
+- **Active Series:** Series 6 (Final Production-Level Verification, Live Gemini Integration, and Headed Browser Automation)
+- **Phase Goal:** Execute real headed Google Chrome browser verification via Playwright, test the application with a live Google Gemini API key, identify the cheapest working Gemini text model (`gemini-3.5-flash-lite`, \$0.30/1M in, \$2.50/1M out), verify all 15 supported formats through the live UI, test the realistic synthetic 1,338-word sample report end-to-end, capture 7 key milestone screenshots, discover and fix all implementation defects, and confirm zero regressions.
+- **Series 6 Status:** 100% Complete and Production-Verified (152 pytest tests passing in 0.91s; full Playwright headed browser suite passed with 0 console errors; all 7 milestone screenshots captured in `TEST/screenshots/`).
 
 ---
 
@@ -341,10 +341,14 @@ All tests executed via `.venv/bin/pytest -v`.
 
 ## 14. Actual Test Results
 
-- **Total Tests Collected & Executed:** 150
-- **Total Tests Passed:** 150 (100% pass rate)
-- **Total Tests Failed:** 0
-- **Execution Time:** ~1.00 seconds
+- **Automated Pytest Suite:** 152 tests collected & executed
+- **Automated Tests Passed:** 152 (100% pass rate in 0.91s)
+- **Headed Browser Test Suite:** Full end-to-end user journey executed in Google Chrome via Playwright (`TEST/integration/test_headed_browser.py`)
+- **Browser Console Errors:** 0
+- **Browser Page Errors:** 0
+- **Milestone Screenshots Captured:** 7 in `TEST/screenshots/`
+- **Supported Formats Verified:** All 15 formats verified with live UI upload & extraction
+- **Live Gemini Model:** `gemini-3.5-flash-lite` verified for criteria generation (4.34s) and AI scoring (3.35s)
 
 ### Test Breakdown by Module:
 1. `TEST/unit/test_all_supported_formats.py`: 29 passed (Individual verification of all 15 formats + encrypted PDF)
@@ -352,7 +356,7 @@ All tests executed via `.venv/bin/pytest -v`.
 3. `TEST/unit/test_gemini_reliability.py`: 11 passed (429/503 retries, 401/403 failure, key scrubbing, empty/malformed responses)
 4. `TEST/unit/test_evaluator.py`: 11 passed (Strict score validation, 0.5 increments, independence rule)
 5. `TEST/unit/test_document_parser.py`: 12 passed (TXT, MD, PDF, DOCX, code inspection, word limits)
-6. `TEST/unit/test_config.py`: 7 passed (Settings, path resolution)
+6. `TEST/unit/test_config.py`: 7 passed (Settings, path resolution, default model `gemini-3.5-flash-lite`)
 7. `TEST/unit/test_comparison_math.py`: 7 passed (Perfect agreement, polar disagreement, signed bias, unequal weights, zero variance)
 8. `TEST/unit/test_security.py`: 6 passed (Path traversal, shell characters, SQLi, XSS, prompt injection)
 9. `TEST/unit/test_criteria_generator.py`: 6 passed (V1, V2, V3 prompts, JSON cleaning, grounding)
@@ -360,22 +364,24 @@ All tests executed via `.venv/bin/pytest -v`.
 11. `TEST/unit/test_database_reliability.py`: 5 passed (FK constraints, atomic rollback, restart persistence, large payloads)
 12. `TEST/unit/test_ai_client.py`: 5 passed (BYOK lifecycle, masking, key scrubbing)
 13. `TEST/unit/test_validators.py`: 4 passed (Pydantic schema validation)
-14. `TEST/unit/test_rubric.py`: 2 passed (Rubric editing, reordering, total marks)
-15. `TEST/integration/test_imports.py`: 12 passed (All core, UI, and config modules import cleanly)
-16. `TEST/integration/test_sample_report_workflow.py`: 3 passed (Full lifecycle, human-only mode, DOCX lifecycle on sample report)
-17. `TEST/integration/test_database.py`: 4 passed (Database initialization, schema separation)
-18. `TEST/integration/test_rubric_integrity.py`: 3 passed (Approved rubric lock after scoring, historical isolation)
-19. `TEST/integration/test_submission_and_rubric_db.py`: 2 passed (Multi-document aggregation, rubric approval)
-20. `TEST/integration/test_evaluation_flow.py`: 2 passed (Full evaluation lifecycle, human-only workflow)
+14. `TEST/unit/test_defects_series6.py`: 2 passed (CriteriaProposalResponse imports, legacy column migration)
+15. `TEST/unit/test_rubric.py`: 2 passed (Rubric editing, reordering, total marks)
+16. `TEST/integration/test_imports.py`: 12 passed (All core, UI, and config modules import cleanly)
+17. `TEST/integration/test_sample_report_workflow.py`: 3 passed (Full lifecycle, human-only mode, DOCX lifecycle on sample report)
+18. `TEST/integration/test_database.py`: 4 passed (Database initialization, schema separation)
+19. `TEST/integration/test_rubric_integrity.py`: 3 passed (Approved rubric lock after scoring, historical isolation)
+20. `TEST/integration/test_submission_and_rubric_db.py`: 2 passed (Multi-document aggregation, rubric approval)
+21. `TEST/integration/test_evaluation_flow.py`: 2 passed (Full evaluation lifecycle, human-only workflow)
+22. `TEST/integration/test_headed_browser.py`: Complete headed browser automation in Google Chrome
 
 ---
 
-## 15. Known Limitations
+## 15. Known Limitations & Operational Recommendations
 
 1. **OCR Exclusion:** Scanned PDFs without extractable text cannot be evaluated (informative warning displayed).
-2. **Deterministic Mocking in Tests:** Automated test suite uses deterministic mocks and local fixtures to verify reliability without incurring API charges or network flakiness. Live Gemini evaluation operates identically in production via BYOK.
-3. **Session-Scoped Key:** In-memory API keys are scoped to the user session; restarting the server requires re-entering the key unless set in `.env`.
-4. **Exporting Non-Scope:** In accordance with Series 5 scope prioritization, file export features (PDF/CSV download) were intentionally omitted in favor of core prototype stability.
+2. **BYOK Session Model:** In-memory API keys are scoped to the user session; restarting the server requires re-entering the key unless provided via environment variables (`GEMINI_API_KEY` / `GOOGLE_API_KEY`).
+3. **Recommended Default Model:** Use `gemini-3.5-flash-lite` for high throughput, lowest operational expense (\$0.30/1M in, \$2.50/1M out), and low roundtrip latency (~3.3s). For highly nuanced, multi-step philosophical essays, `gemini-3.8-flash` may optionally be selected in Settings.
+4. **Disagreement Threshold:** Configured to a strict 10.0 percentage point tolerance. Criteria exceeding this threshold are flagged with warning badges for manual inspection.
 
 ---
 
@@ -451,3 +457,22 @@ All tests executed via `.venv/bin/pytest -v`.
 - [x] UI stabilized and verified locally on port 8507 (`HTTP 200 OK`).
 - [x] Final project report (`DOCS/report.md`) updated.
 - [x] Final append-only journal entry added to `DOCS/journal.md`.
+
+### Series 6: Production Verification, Live Gemini Integration, and Headed Browser Testing
+- [x] Live Gemini API key verified in project environment without exposure or leakage.
+- [x] Cheapest working Gemini text model identified and verified (`gemini-3.5-flash-lite`, \$0.30/1M in, \$2.50/1M out).
+- [x] `config/settings.py` updated to set `gemini-3.5-flash-lite` as the default model.
+- [x] Headed Google Chrome browser automated using Playwright (`headless=False`) on macOS.
+- [x] 0 unhandled console errors and 0 page errors recorded during browser testing.
+- [x] All 15 supported formats verified through the live UI (acceptance, text extraction, word counts).
+- [x] Realistic 1,338-word technical report evaluated through complete live workflow.
+- [x] Grounded criteria generated with verbatim document quotes and citations.
+- [x] Human rubric editing and reordering exercised to confirm human control.
+- [x] Strict independence rule enforced (AI scores hidden until human submission complete).
+- [x] Independent AI scoring completed with live Gemini.
+- [x] Comparison dashboard verified (grouped bar chart, MAE, agreement rate, directional bias).
+- [x] Evaluation history and persistence verified across browser reload and server restart.
+- [x] 7 milestone screenshots captured in `TEST/screenshots/`.
+- [x] 4 discovered defects fixed with automated regression tests.
+- [x] 152 automated pytest tests passing (100% pass rate in 0.91s).
+- [x] Production verification report generated at `TEST/production_verification_report.md`.

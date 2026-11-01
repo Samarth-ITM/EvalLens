@@ -36,56 +36,56 @@ def _migrate_columns_if_missing(conn: sqlite3.Connection) -> None:
     cursor = conn.cursor()
 
     # Columns in 'evaluations'
-    eval_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(evaluations);").fetchall()}
-    if "submission_type" not in eval_cols and "evaluations" in eval_cols:
+    eval_cols = {row[1] for row in cursor.execute("PRAGMA table_info(evaluations);").fetchall()}
+    if eval_cols and "submission_type" not in eval_cols:
         cursor.execute("ALTER TABLE evaluations ADD COLUMN submission_type TEXT NOT NULL DEFAULT 'Custom';")
-    if "instructions" not in eval_cols and "evaluations" in eval_cols:
+    if eval_cols and "instructions" not in eval_cols:
         cursor.execute("ALTER TABLE evaluations ADD COLUMN instructions TEXT;")
-    if "reference_material" not in eval_cols and "evaluations" in eval_cols:
+    if eval_cols and "reference_material" not in eval_cols:
         cursor.execute("ALTER TABLE evaluations ADD COLUMN reference_material TEXT;")
-    if "prompt_version" not in eval_cols and "evaluations" in eval_cols:
+    if eval_cols and "prompt_version" not in eval_cols:
         cursor.execute("ALTER TABLE evaluations ADD COLUMN prompt_version TEXT DEFAULT 'V3';")
-    if "total_words" not in eval_cols and "evaluations" in eval_cols:
+    if eval_cols and "total_words" not in eval_cols:
         cursor.execute("ALTER TABLE evaluations ADD COLUMN total_words INTEGER DEFAULT 0;")
 
     # Columns in 'submissions'
-    sub_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(submissions);").fetchall()}
-    if "word_count" not in sub_cols and "submissions" in sub_cols:
+    sub_cols = {row[1] for row in cursor.execute("PRAGMA table_info(submissions);").fetchall()}
+    if sub_cols and "word_count" not in sub_cols:
         cursor.execute("ALTER TABLE submissions ADD COLUMN word_count INTEGER DEFAULT 0;")
-    if "warnings" not in sub_cols and "submissions" in sub_cols:
+    if sub_cols and "warnings" not in sub_cols:
         cursor.execute("ALTER TABLE submissions ADD COLUMN warnings TEXT;")
 
     # Columns in 'rubrics'
-    rubric_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(rubrics);").fetchall()}
-    if "total_marks" not in rubric_cols and "rubrics" in rubric_cols:
+    rubric_cols = {row[1] for row in cursor.execute("PRAGMA table_info(rubrics);").fetchall()}
+    if rubric_cols and "total_marks" not in rubric_cols:
         cursor.execute("ALTER TABLE rubrics ADD COLUMN total_marks REAL NOT NULL DEFAULT 0.0;")
-    if "is_approved" not in rubric_cols and "rubrics" in rubric_cols:
+    if rubric_cols and "is_approved" not in rubric_cols:
         cursor.execute("ALTER TABLE rubrics ADD COLUMN is_approved INTEGER NOT NULL DEFAULT 0;")
-    if "approved_at" not in rubric_cols and "rubrics" in rubric_cols:
+    if rubric_cols and "approved_at" not in rubric_cols:
         cursor.execute("ALTER TABLE rubrics ADD COLUMN approved_at TIMESTAMP;")
-    if "prompt_version" not in rubric_cols and "rubrics" in rubric_cols:
+    if rubric_cols and "prompt_version" not in rubric_cols:
         cursor.execute("ALTER TABLE rubrics ADD COLUMN prompt_version TEXT DEFAULT 'V3';")
 
     # Columns in 'rubric_criteria'
-    crit_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(rubric_criteria);").fetchall()}
-    if "why_it_matters" not in crit_cols and "rubric_criteria" in crit_cols:
+    crit_cols = {row[1] for row in cursor.execute("PRAGMA table_info(rubric_criteria);").fetchall()}
+    if crit_cols and "why_it_matters" not in crit_cols:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN why_it_matters TEXT;")
-    if "evidence_guidance" not in crit_cols and "rubric_criteria" in crit_cols:
+    if crit_cols and "evidence_guidance" not in crit_cols:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN evidence_guidance TEXT;")
-    if "evidence_excerpt" not in crit_cols and "rubric_criteria" in crit_cols:
+    if crit_cols and "evidence_excerpt" not in crit_cols:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN evidence_excerpt TEXT;")
-    if "evidence_location" not in crit_cols and "rubric_criteria" in crit_cols:
+    if crit_cols and "evidence_location" not in crit_cols:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN evidence_location TEXT;")
-    if "scoring_guidance" not in crit_cols and "rubric_criteria" in crit_cols:
+    if crit_cols and "scoring_guidance" not in crit_cols:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN scoring_guidance TEXT;")
-    if "is_ai_generated" not in crit_cols and "rubric_criteria" in crit_cols:
+    if crit_cols and "is_ai_generated" not in crit_cols:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN is_ai_generated INTEGER NOT NULL DEFAULT 1;")
 
     # Columns in 'ai_scores'
-    ai_score_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(ai_scores);").fetchall()}
-    if "evidence_location" not in ai_score_cols and "ai_scores" in ai_score_cols:
+    ai_score_cols = {row[1] for row in cursor.execute("PRAGMA table_info(ai_scores);").fetchall()}
+    if ai_score_cols and "evidence_location" not in ai_score_cols:
         cursor.execute("ALTER TABLE ai_scores ADD COLUMN evidence_location TEXT;")
-    if "uncertainty" not in ai_score_cols and "ai_scores" in ai_score_cols:
+    if ai_score_cols and "uncertainty" not in ai_score_cols:
         cursor.execute("ALTER TABLE ai_scores ADD COLUMN uncertainty TEXT;")
 
     conn.commit()

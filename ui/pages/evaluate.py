@@ -300,8 +300,15 @@ def render_evaluate_page() -> None:
                 ai_p = comparison.ai_percentage or 0.0
                 st.metric("AI Suggestion", f"{ai_t:.1f} / {comparison.max_possible_marks:.1f}", f"{ai_p:.1f}%")
             with m3:
-                diff = comparison.total_difference or 0.0
-                st.metric("Total Diff", f"{diff:+.1f} pts")
+                bias = comparison.directional_bias if comparison.directional_bias is not None else 0.0
+                bias_label = "AI Higher" if bias > 0 else ("AI Lower" if bias < 0 else "Aligned")
+                st.metric(
+                    "Directional Bias",
+                    f"{bias:+.1f} pts",
+                    delta=bias_label,
+                    delta_color="off",
+                    help="Aggregate difference between AI and Human scores (AI Total - Human Total).",
+                )
             with m4:
                 st.metric(
                     "MAE (Normalized)",
@@ -402,7 +409,7 @@ def run_ai_eval_action(
     criteria: List[Any],
 ) -> None:
     """Helper to execute AI evaluation."""
-    api_key = st.session_state.get("gemini_api_key", settings.env_gemini_api_key)
+    api_key = st.session_state.get("gemini_api_key") or settings.env_gemini_api_key
     if not api_key:
         st.error(
             "No Gemini API key configured. Please enter your key in **Settings → AI Configuration** "

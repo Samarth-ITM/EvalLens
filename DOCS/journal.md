@@ -501,3 +501,66 @@ High. The codebase has undergone comprehensive edge-case and failure testing wit
 
 ### Confidence Assessment
 Extremely High. The application is completely functional, stable, and deterministic. All 15 formats parse reliably, product rules and independence boundaries are fully enforced, comparison mathematics are exact, and 150 automated tests pass without errors.
+
+
+---
+
+## Entry 6: 2026-11-01 — Series 6: Final Production-Level Verification, Live Gemini Integration, and Headed Browser Testing
+
+### Objectives
+1. Inspect project environment and verify live Google Gemini API key availability without logging, exposing, or persisting credentials.
+2. Identify and verify the cheapest currently available working Gemini text model (`gemini-3.5-flash-lite`, \$0.30/1M input, \$2.50/1M output) using live API calls for both criteria generation and rubric scoring; set as default.
+3. Automate real headed Google Chrome on macOS via Playwright (`headless=False`) to test the complete user journey in a real browser.
+4. Verify all 15 supported formats (TXT, MD, PDF, DOCX, PY, CPP, H, HPP, JAVA, JS, TS, JSON, HTML, CSS, SQL) individually through the live UI.
+5. Execute end-to-end evaluation lifecycle with the realistic synthetic sample report (*Distributed Edge Anomaly Detection: Architecture & Performance Evaluation*, 1,338 words, DOCX).
+6. Verify human rubric review, editing, adding, and reordering to prove human control.
+7. Verify strict evaluation independence guardrail at both UI and database query levels.
+8. Execute live independent AI scoring with Gemini, verifying evidence citations and uncertainty reporting.
+9. Verify comparison dashboard analytics (MAE, 10 pp agreement rate, directional bias, side-by-side Plotly bar chart).
+10. Confirm data persistence in SQLite across page reload and server restart.
+11. Capture 7 milestone screenshots into `TEST/screenshots/`.
+12. Discover and fix all defects uncovered during testing with automated regression tests.
+13. Rerun full automated test suite to confirm zero regressions.
+
+### Implementation Details & Changes Made
+1. **Model Selection & Configuration (`config/settings.py`):**
+   - Evaluated models against official Gemini documentation: selected `gemini-3.5-flash-lite` (\$0.30/1M in, \$2.50/1M out) over `gemini-3.8-flash` (\$0.60/1M in) and `gemini-4-argon` (\$2.50/1M in).
+   - Updated `DEFAULT_MODEL = "gemini-3.5-flash-lite"` in `config/settings.py`.
+   - Updated settings to check both `GEMINI_API_KEY` and `GOOGLE_API_KEY` environment variables.
+2. **Defect 1 Resolution — Missing Pydantic Model Imports (`ui/pages/new_evaluation.py`):**
+   - Fixed `NameError: name 'CriteriaProposalResponse' is not defined` when approving an AI-generated rubric.
+   - Imported `CriteriaProposalResponse` and `CriterionProposal` from `core.validators`.
+   - Stored `st.session_state["last_ai_proposal"] = proposal` upon AI generation.
+3. **Defect 2 Resolution — Broken SQLite Migration Condition (`database/db.py`):**
+   - Fixed `and "evaluations" in eval_cols` condition in `_migrate_columns_if_missing()`. Because `eval_cols` holds column names, checking table name was always false, which skipped migrations on existing databases.
+   - Fixed condition to `if eval_cols and "submission_type" not in eval_cols:` across all tables.
+4. **Defect 3 Resolution — Tuple Access in Database Column Migration (`database/db.py`):**
+   - Fixed `TypeError: tuple indices must be integers or slices, not str` when row factory is not active.
+   - Switched to positional index `row[1]` from `PRAGMA table_info`, which works for both tuples and `sqlite3.Row`.
+5. **Defect 4 Resolution — Comparison Dashboard Metric Clarity (`ui/pages/evaluate.py`):**
+   - Updated metric from generic `"Total Diff"` to explicit `"Directional Bias"` with signed score delta (`+1.5 pts`) and direction tag (`AI Higher` / `AI Lower` / `Aligned`).
+6. **Robust API Key Fallback (`ui/pages/new_evaluation.py` & `ui/pages/evaluate.py`):**
+   - Updated `api_key = st.session_state.get("gemini_api_key") or settings.env_gemini_api_key` to prevent empty strings from blocking key fallback.
+
+### Test Strategy & Files Created / Modified
+- Created `TEST/integration/test_headed_browser.py`: End-to-end automation driving Google Chrome via Playwright (`headless=False`) across port 8508, testing all 15 formats, realistic sample report, live Gemini generation (4.34s) and scoring (3.35s), and persistence.
+- Created `TEST/unit/test_defects_series6.py`: 2 regression unit tests verifying `new_evaluation` model accessibility and legacy SQLite schema migration.
+- Captured 7 milestone screenshots in `TEST/screenshots/`:
+  1. `01_upload_sample_report.png`
+  2. `02_criteria_generated_live.png`
+  3. `03_rubric_approved.png`
+  4. `04_human_evaluation_submitted.png`
+  5. `05_ai_evaluation_completed.png`
+  6. `06_comparison_dashboard.png`
+  7. `07_evaluation_history.png`
+- Created `TEST/production_verification_report.md` (complete 10-section report).
+
+### Actual Test Results
+- **Automated Pytest Suite:** **152 passed in 0.91s** (152 passed, 0 failed, 0 skipped).
+- **Headed Browser Suite:** **PASSED** (0 console errors, 0 page errors, all milestones passed).
+- **Supported Formats:** All 15 formats accepted, extracted, and word-counted cleanly through the live UI.
+- **Sample Report E2E:** Awarded Human 21.5 / 25.0, AI 20.0 / 25.0, MAE 30.0%, Agreement 40.0%, Directional Bias +1.5 pts. Verbatim evidence citations verified against document text.
+- **Persistence:** Verified across browser refresh and server process termination.
+
+### Confidence Assessment
+Production Ready. The prototype has been verified through real user interface execution in Google Chrome with live Google Gemini API calls. All 15 formats parse reliably, independence guardrails are strictly enforced, comparison metrics are mathematically exact, and 152 automated tests pass with 100% success.

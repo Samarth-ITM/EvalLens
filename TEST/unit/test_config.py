@@ -30,8 +30,8 @@ def test_settings_initialization() -> None:
     assert app_settings.PROJECT_NAME == "EvalLens"
     assert app_settings.PROJECT_TAGLINE == "Human + AI Evaluation Workspace"
     assert len(app_settings.SUPPORTED_MODELS) >= 3
-    assert "gemini-3.8-flash" in app_settings.SUPPORTED_MODELS
-    assert app_settings.DEFAULT_MODEL == "gemini-3.8-flash"
+    assert "gemini-3.5-flash-lite" in app_settings.SUPPORTED_MODELS
+    assert app_settings.DEFAULT_MODEL == "gemini-3.5-flash-lite"
 
 
 def test_settings_security_repr() -> None:

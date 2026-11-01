@@ -42,11 +42,11 @@ class Settings:
 
     # Supported Gemini models in the official google-genai SDK
     SUPPORTED_MODELS: list[str] = [
-        "gemini-3.8-flash",
-        "gemini-3.5-flash-lite",
-        "gemini-4-argon",
+        "gemini-3.5-flash-lite",  # Default: cheapest, high-throughput model ($0.30/1M in, $2.50/1M out)
+        "gemini-3.8-flash",       # Standard flash model
+        "gemini-4-argon",         # Advanced reasoning model
     ]
-    DEFAULT_MODEL: str = "gemini-3.8-flash"
+    DEFAULT_MODEL: str = "gemini-3.5-flash-lite"
 
     def __init__(self) -> None:
         self.env: str = os.getenv("EVALLENS_ENV", "development").lower()
@@ -58,7 +58,9 @@ class Settings:
             self.db_path = self.DEFAULT_DB_PATH
 
         # Optional environment fallback for Gemini API key
-        self._env_gemini_api_key: Optional[str] = os.getenv("GEMINI_API_KEY", "").strip() or None
+        self._env_gemini_api_key: Optional[str] = (
+            os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip() or None
+        )
         self.default_model: str = os.getenv("GEMINI_MODEL", self.DEFAULT_MODEL).strip()
 
     @property
