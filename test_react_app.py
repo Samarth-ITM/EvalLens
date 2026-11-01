@@ -31,8 +31,8 @@ def run_test():
         print("3. Verifying Home page & Animated Micro-Explainer...")
         page.wait_for_selector("text=How EvalLens Works")
         page.wait_for_selector("text=Skip Guide")
-        page.screenshot(path="REACT/screenshot_home.png")
-        print("   Captured REACT/screenshot_home.png")
+        page.screenshot(path="screenshot_home.png")
+        print("   Captured screenshot_home.png")
 
         # Test Skip Guide
         page.click('button:has-text("Skip Guide")')
@@ -58,8 +58,8 @@ def run_test():
         print("6. Generating rubric...")
         page.click('button:has-text("Analyze Submission with AI")')
         page.wait_for_selector("text=Review & Customize Rubric", timeout=10000)
-        page.screenshot(path="REACT/screenshot_rubric.png")
-        print("   Captured REACT/screenshot_rubric.png (Rubric in pristine white UI)")
+        page.screenshot(path="screenshot_rubric.png")
+        print("   Captured screenshot_rubric.png (Rubric in pristine white UI)")
 
         # 7. Approve Rubric
         print("7. Approving rubric and transitioning to scoring...")
@@ -96,8 +96,8 @@ def run_test():
         page.wait_for_selector("text=AI Suggested Mark:")
         page.wait_for_selector("text=Reason:")
         page.wait_for_selector("text=Critic:")
-        page.screenshot(path="REACT/screenshot_evaluation.png")
-        print("   Captured REACT/screenshot_evaluation.png (AI Suggested Mark, Reason, Critic)")
+        page.screenshot(path="screenshot_evaluation.png")
+        print("   Captured screenshot_evaluation.png (AI Suggested Mark, Reason, Critic)")
 
         # 12. Test Save & Done Navigation
         print("12. Testing Save & Done (Proceed to Dashboard)...")
@@ -113,8 +113,8 @@ def run_test():
         page.click('button:has-text("View Previous Results")')
         page.wait_for_timeout(800)
         page.wait_for_selector("text=Evaluation History")
-        page.screenshot(path="REACT/screenshot_history.png")
-        print("   Captured REACT/screenshot_history.png")
+        page.screenshot(path="screenshot_history.png")
+        print("   Captured screenshot_history.png")
 
         print("\n>>> ALL TEST PHASES PASSED WITH FLYING COLORS!")
         browser.close()

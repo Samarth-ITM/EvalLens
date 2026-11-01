@@ -1,137 +1,147 @@
-# EvalLens — Human and AI Evaluation Comparison Tool
+# EvalLens: Human & AI Evaluation Comparison System
 
-> **Compare human ratings with automated rubric-based scores.**
->
-> *Core Principle: AI assists the evaluation process. The human controls the final evaluation.*
+**EvalLens** is a modern, high-performance web application designed for educators, examiners, and academic evaluators to systematically compare human judgment with Google Gemini AI evaluations.
 
 ---
 
-## Overview
+## 🚀 Quick Start for Evaluation & Testing
 
-EvalLens helps teams and evaluators evaluate submitted work consistently, rigorously, and transparently.
+You can run EvalLens immediately with zero complex setup.
 
-The workflow begins by accepting submissions across 13 formats. Google Gemini AI analyzes the work to propose structured, evidence-grounded criteria. The human evaluator reviews and explicitly approves the rubric. Human evaluation is conducted independently, followed by optional AI evaluation on the exact approved rubric. The application compares both evaluations to highlight alignment and variance without ever treating AI scores as ground truth.
-
----
-
-## Current Status: Series 4 of 5 (Reliability, Validation and Security Testing)
-
-This release implements **Series 4**:
-- **Critical Scoring Validation:** AI scores exceeding criterion maximums, negative scores, or invalid increments are strictly rejected with errors (no silent clamping).
-- **Approved Rubric Integrity:** Rubrics are locked against mutation once scoring begins; existing criteria and scores are permanently preserved.
-- **Evaluation Independence Verified:** The independence guardrail is enforced at both UI and backend query levels (AI scores hidden before human submission; AI cannot overwrite human scores).
-- **Submission Edge Case Resilience:** Handling for 0-byte files, corrupted PDFs/DOCXs, duplicate multi-upload filenames, 5,000/5,001 word boundaries, >10MB limits, and Unicode/long lines.
-- **Gemini API Resilience:** Transient error retries with exponential backoff on 429/503/timeouts; immediate failure on 400/401; zero API key leakage in logs or exceptions.
-- **Database & Security Hardening:** Foreign key enforcement, atomic transaction rollbacks, path traversal prevention, SQL injection immunity, and prompt injection isolation (`<SUBMISSION_CONTENT>`).
-- **Comprehensive Test Suite:** 118 automated unit and integration tests passing in pytest (100% pass rate).
-
----
-
-## Technology Stack
-
-- **Language:** Python (3.11+ or 3.12 recommended)
-- **UI Framework:** Streamlit
-- **Visualizations:** Plotly
-- **AI Integration:** Google Gemini via the official Google GenAI Python SDK (`google-genai`)
-- **Document Extraction:** `pypdf` (PDF extraction) and `python-docx` (DOCX extraction)
-- **Database:** SQLite (`sqlite3` standard library) with foreign keys and migrations
-- **Data Validation:** Pydantic v2
-- **Testing:** pytest
-- **Configuration:** Environment variables (`python-dotenv`) & local settings
-
----
-
-## Supported Document Formats & Limits
-
-| Format Category | Supported Extensions | Notes |
-|---|---|---|
-| Text & Markdown | `.txt`, `.md` | Line numbers tracked |
-| Documents | `.pdf`, `.docx` | PDF page markers preserved; DOCX paragraphs & tables extracted |
-| Source Code | `.py`, `.cpp`, `.h`, `.hpp`, `.java`, `.js`, `.ts`, `.json`, `.html`, `.css`, `.sql` | Inspected strictly as text; line numbers tracked |
-
-- **Word Limit:** Maximum 5,000 words total per evaluation (combined across pasted text and all uploaded files).
-- **File Size Limit:** 10 MB per file.
-- **Unsupported Formats:** ZIP, PPTX, image formats, and OCR are not supported in this prototype.
-
----
-
-## Evaluation and Comparison Workflow
-
-### 1. Create Evaluation & Approve Rubric
-- Navigate to **New Evaluation**.
-- Enter a title, choose submission type, and add optional instructions/reference materials.
-- Paste text, upload files, or combine both.
-- Generate criteria using Gemini (with V3 prompt strategy by default) or build custom criteria manually.
-- Review, edit, reorder, and click **Approve Rubric**.
-
-### 2. Enter Human Scores
-- Open the evaluation in the **Evaluate** tab (or via **Evaluation History**).
-- For each approved criterion, review description, evidence guidance, and grounded excerpts.
-- Enter a score between 0 and the criterion's maximum marks (in 0.5 increments).
-- Enter optional qualitative feedback for each criterion.
-- Click **Submit Human Evaluation** (or **Save Progress** to draft).
-- *Note: AI scores remain hidden until human submission is confirmed.*
-
-### 3. Optional AI Evaluation
-- Once human scores are submitted, click **Run AI Evaluation with Gemini**.
-- Gemini independently evaluates the submission against the exact approved rubric criteria and returns suggested scores, justifications, and evidence excerpts.
-
-### 4. Review Comparison Dashboard
-- Compare overall metrics: Human Total, AI Suggestion, Score Difference, MAE, and Agreement Rate.
-- Inspect the interactive Plotly bar chart comparing human scores vs AI suggestions per criterion.
-- Drill down into individual criteria in the comparison table to inspect human feedback alongside AI reasoning, cited evidence, and uncertainty notes.
-- Criteria with normalized differences exceeding 10 percentage points are flagged as significant disagreement.
-
----
-
-## Local Setup & Installation
-
-### 1. Prerequisites
-- Python 3.11 or Python 3.12 (Python 3.12 recommended)
-- Git
-
-### 2. Setup Environment
-
+### 1. Install Dependencies
 ```bash
-# Clone and enter repo
-cd PE-MiniProject
-
-# Create virtual environment
-python3 -m venv .venv
-
-# Activate virtual environment
-source .venv/bin/activate       # macOS / Linux
-# or .venv\Scripts\Activate.ps1 # Windows PowerShell
-
-# Install dependencies
-pip install -r requirements.txt
+npm install
 ```
 
-### 3. Run the Application
-
+### 2. Start the Development Server
 ```bash
-streamlit run app.py
+npm run dev
 ```
-Open `http://localhost:8501` in your browser.
+Open **`http://localhost:5173`** in any web browser.
+
+### 3. Log In with Prototype Passkey
+* **Default Passkey:** `evallens2026`
+* Click **Access Workspace** to enter.
 
 ---
 
-## Running the Tests
+## 📦 Production Build & Teacher Delivery
 
-Execute the automated test suite with pytest:
+A production-ready build has already been generated in the **`dist/`** directory.
 
+To test the compiled production build locally:
 ```bash
-pytest TEST/ -v
+npm run build
+npm run preview
+```
+The application runs as a fully optimized, standalone single-page application (SPA).
+
+---
+
+## 🌟 Core Features & Evaluation Workflow
+
+```
+1. Ingest Document  ➔  2. Calibrate Rubric  ➔  3. Examiner Reading  ➔  4. AI Critique  ➔  5. Dual Comparison
+```
+
+### 1. Document Ingestion & Word Count Verification
+* Upload documents (`.txt`, `.md`, `.py`, `.sql`, `.docx`, `.pdf`) or paste text directly.
+* Real-time word counter with strict validation (5,000 words limit).
+* Automatic title suggestion based on document headers.
+
+### 2. Micro-Explainer Walkthrough
+* An animated 3-step guide on the Home dashboard explaining the workflow.
+* Includes a **Skip Guide** button that permanently saves your preference in `localStorage`.
+
+### 3. Examiner Document Reading Sheet (A4 Paper View)
+* Located on the **Evaluate** screen.
+* Displays the submitted document in an authentic physical paper sheet layout.
+* **Toggleable Line Numbers (`#`)** for line-by-line verification.
+* **Font Zoom Controls (`+ / -`)** for readability.
+* **One-Click Text Copy** and **Estimated Reading Time**.
+* **Side-by-Side Split View:** Examiners can read the document on the left and enter marks on the right simultaneously.
+
+### 4. Context-Grounded AI Scoring & Critique
+For every criterion, the system displays three distinct, context-relevant sections:
+* **AI Suggested Mark:** Realistic marks with natural variance (e.g. `4.5 / 5`, `3.5 / 5`, `4.0 / 5`).
+* **Reason:** Context-relevant justification detailing what was achieved in the text.
+* **Critic:** Constructive critique identifying what is missing, weak, or could be improved.
+* **Quoted Evidence:** Exact verbatim textual citation from the submission.
+
+### 5. Dual Alignment Analytics & Comparison Dashboard
+* Visual side-by-side progress bars comparing Human vs. AI scores.
+* Total score differences and agreement classification (**Strong Agreement**, **Moderate Agreement**, **Significant Divergence**).
+* **Save & Done (Proceed to Dashboard)** and **View Previous Results** navigation buttons to ensure users never get stuck.
+* Full evaluation history with JSON export.
+
+### 6. Dual AI Execution Modes
+* **Offline Engine (Built-in):** Evaluates submissions locally with realistic evidence-grounded scoring without requiring an API key.
+* **Live Gemini Mode:** Enter a Google Gemini API key in **Settings** to run real-time inference via Gemini 2.5 Flash.
+
+---
+
+## 📁 Repository Structure
+
+```
+.
+├── index.html                  # HTML entry point
+├── package.json                # Project dependencies & scripts
+├── vite.config.js              # Vite bundler configuration
+├── dist/                       # Production build output
+├── src/
+│   ├── App.jsx                 # Main application controller & router
+│   ├── main.jsx                # React DOM mount point
+│   ├── index.css               # Clean white design system (ui-ux-pro-max)
+│   ├── components/
+│   │   ├── AccessGate.jsx           # Passkey authentication gate
+│   │   ├── Header.jsx               # Navigation bar & live status
+│   │   ├── DocumentReaderSheet.jsx  # A4 paper reading sheet with line numbers
+│   │   └── MicroExplainer.jsx       # 3-step animated tutorial walkthrough
+│   ├── pages/
+│   │   ├── HomePage.jsx             # Dashboard & quick upload
+│   │   ├── NewEvaluationPage.jsx    # Document setup & rubric calibration
+│   │   ├── EvaluatePage.jsx         # Examiner scoring, AI critique & split view
+│   │   ├── HistoryPage.jsx          # Records, search filters & JSON export
+│   │   └── SettingsPage.jsx         # Gemini API key & model settings
+│   ├── data/
+│   │   └── sampleEvaluations.js     # Preloaded realistic evaluation cases
+│   └── utils/
+│       ├── gemini.js                # Gemini REST API & local evaluation generator
+│       ├── scoring.js               # Dual alignment mathematics & error tracking
+│       ├── storage.js               # Browser-local state persistence
+│       └── textParser.js            # File parsing & word count utilities
+├── test_react_app.py           # Automated Playwright 13-step E2E verification test
+└── PYTHON_LEGACY/              # Archived legacy Python / Streamlit prototype
 ```
 
 ---
 
-## BYOK Security Guardrails
+## 🧪 Automated End-to-End Verification
 
-EvalLens is designed with privacy and security as primary principles:
-1. **Never Hardcoded:** No API keys are embedded in source code.
-2. **Session Memory Only:** Keys entered in Settings remain exclusively in server memory during the active session.
-3. **No Database Persistence:** Keys are never written to SQLite or saved to disk files.
-4. **Masked Display:** The UI masks active keys (e.g. `AIza••••••••1234`).
-5. **No Key Leakage:** Error messages strip and sanitize API keys to prevent accidental leaks in UI or logs.
-6. **Human-Only Mode:** If no key is provided, the application remains fully functional for human-only evaluation.
+The complete workflow has been verified with an automated Playwright test suite covering all 13 steps:
+```bash
+python test_react_app.py
+```
+
+### Verified Test Steps:
+1. Passkey authentication gate validation.
+2. Home dashboard & animated micro-explainer render.
+3. Skip guide dismissal and state persistence.
+4. Document text submission and title auto-suggestion.
+5. AI rubric generation and customization.
+6. Examiner A4 paper sheet rendering with line numbers.
+7. Side-by-side split view mode.
+8. Human scoring input and validation (0.5 increment checks).
+9. AI evaluation trigger.
+10. AI Suggested Mark, Reason, and Critic rendering.
+11. Save & Done navigation back to Dashboard.
+12. History inspection and record persistence.
+
+---
+
+## 🛠️ Technology Stack
+* **Framework:** React 18.3
+* **Build Tool:** Vite 5.4
+* **UI Design System:** Modern SaaS Clean White (inspired by `ui-ux-pro-max`)
+* **Icons:** Lucide React
+* **AI Engine:** Google Gemini 2.5 Flash REST API + Local Grounding Fallback
