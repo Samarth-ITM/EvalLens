@@ -1,0 +1,31 @@
+:root {
+    --primary-color: #1a73e8;
+    --success-color: #0f9d58;
+    --warning-color: #f4b400;
+    --danger-color: #d93025;
+    --card-background: #ffffff;
+    --border-radius-base: 6px;
+}
+
+body {
+    margin: 0;
+    padding: 1.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f8f9fa;
+    color: #202124;
+}
+
+.dashboard-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.metric-card {
+    background: var(--card-background);
+    border-radius: var(--border-radius-base);
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(60,64,67, 0.15);
+}

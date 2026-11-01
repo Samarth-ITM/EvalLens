@@ -133,6 +133,21 @@ def parse_pdf_file(file_bytes: bytes, filename: str) -> ParsedDocument:
 
     try:
         reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+        if getattr(reader, "is_encrypted", False):
+            warnings.append(
+                "PDF is password-protected or encrypted, which is not supported in this prototype."
+            )
+            return ParsedDocument(
+                filename=filename,
+                extension=".pdf",
+                raw_text="",
+                formatted_text="",
+                word_count=0,
+                line_count=0,
+                page_count=0,
+                warnings=warnings,
+            )
+
         total_pages = len(reader.pages)
 
         for p_idx, page in enumerate(reader.pages):

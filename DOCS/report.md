@@ -2,7 +2,7 @@
 
 **Product Title:** Human and AI Evaluation Comparison Tool  
 **Category:** AI Evaluation  
-**Current Status:** Series 4 Complete (Series 4 of 5)  
+**Current Status:** Series 5 Complete — Prototype Stabilized & Verified (v1.0.0)  
 **Maintained by:** Implementation Agent (Antigravity)  
 **Product Owner & System Architect:** User  
 
@@ -12,7 +12,7 @@
 
 EvalLens is an AI evaluation comparison tool designed to help evaluators and organizations assess submitted work consistently, rigorously, and transparently.
 
-The workflow begins by accepting submissions (documents, source code, or pasted text) across 13 formats. Google Gemini AI analyzes the work to propose structured, evidence-grounded criteria. The human evaluator reviews, refines, reorders, and explicitly approves the rubric before any evaluation occurs. Once the rubric is approved:
+The workflow begins by accepting submissions (documents, source code, or pasted text) across 15 supported formats (TXT, MD, PDF, DOCX, PY, CPP, H, HPP, JAVA, JS, TS, JSON, HTML, CSS, SQL). Google Gemini AI analyzes the work to propose structured, evidence-grounded criteria. The human evaluator reviews, refines, reorders, and explicitly approves the rubric before any evaluation occurs. Once the rubric is approved:
 1. **Independent Human Scoring:** The evaluator scores each criterion with optional qualitative feedback.
 2. **Independence Guardrail:** AI scores, recommendations, and explanations remain strictly hidden from the evaluator until human scoring is finalized and submitted (enforced at both UI and backend query levels).
 3. **Optional Independent AI Scoring:** Gemini scores the original submission against the exact approved rubric criteria, providing justifications, cited evidence, and uncertainty notes without hallucinating criteria or facts.
@@ -27,9 +27,9 @@ The workflow begins by accepting submissions (documents, source code, or pasted 
 
 ## 2. Current Development Phase
 
-- **Active Series:** Series 4 of 5 (Reliability, Validation and Security Testing)
-- **Phase Goal:** Verify that EvalLens behaves correctly under normal, invalid, unexpected, and failure conditions. Fix AI score clamping into strict validation rejection. Enforce evaluation independence at UI and backend query levels. Enforce approved rubric integrity after scoring commences. Test submission edge cases (empty files, corrupt documents, unsupported formats, duplicate filenames, 5,000/5,001 word boundaries, >10MB limits, Unicode). Implement Gemini API transient error retry (max 2 retries with backoff on 429/503/timeouts; immediate failure on 400/401). Verify zero API key exposure in errors/logs. Test database reliability, foreign keys, transaction rollback, and restart persistence. Test security (path traversal, SQL injection, XSS, prompt injection). Verify mathematical precision of MAE, correlation zero-variance protection, and directional bias.
-- **Series 4 Status:** Complete and verified (118 tests passing, 0 failures).
+- **Active Series:** Series 5 of 5 (Prototype Stabilization, Testing and Final Verification)
+- **Phase Goal:** Stabilize the prototype, eliminate existing defects, verify that all 15 supported document formats parse and integrate cleanly, create and evaluate a realistic 1,338-word technical report fixture (`TEST/fixtures/sample_report.md` & `.docx`), verify full end-to-end evaluation and comparison workflows, test failure boundaries (submission, API, database, security), verify human-only execution mode without an API key, and document comprehensive verification in `TEST/sample_test_report.md`.
+- **Series 5 Status:** Complete, verified, and stabilized (150 tests passing, 0 failures).
 
 ---
 
@@ -341,30 +341,32 @@ All tests executed via `.venv/bin/pytest -v`.
 
 ## 14. Actual Test Results
 
-- **Total Tests Collected & Executed:** 118
-- **Total Tests Passed:** 118 (100% pass rate)
+- **Total Tests Collected & Executed:** 150
+- **Total Tests Passed:** 150 (100% pass rate)
 - **Total Tests Failed:** 0
-- **Execution Time:** ~0.80 seconds
+- **Execution Time:** ~1.00 seconds
 
 ### Test Breakdown by Module:
-1. `TEST/unit/test_ai_client.py`: 5 passed (BYOK lifecycle, masking, key scrubbing)
-2. `TEST/unit/test_validators.py`: 4 passed (Pydantic schema validation)
-3. `TEST/unit/test_config.py`: 7 passed (Settings, path resolution)
-4. `TEST/unit/test_document_parser.py`: 12 passed (TXT, MD, PDF, DOCX, code inspection, word limits)
-5. `TEST/unit/test_criteria_generator.py`: 6 passed (V1, V2, V3 prompts, JSON cleaning, grounding)
-6. `TEST/unit/test_rubric.py`: 2 passed (Rubric editing, reordering, total marks)
-7. `TEST/unit/test_evaluator.py`: 11 passed (Strict score validation, 0.5 increments, independence rule)
-8. `TEST/unit/test_comparison.py`: 5 passed (MAE, tolerance threshold, missing AI score handling)
-9. `TEST/unit/test_submission_edge_cases.py`: 14 passed (Empty files, corrupt docs, 5,000/5,001 words, >10MB, Unicode)
-10. `TEST/unit/test_gemini_reliability.py`: 11 passed (429/503 retries, 401/403 failure, key scrubbing, empty/malformed responses)
+1. `TEST/unit/test_all_supported_formats.py`: 29 passed (Individual verification of all 15 formats + encrypted PDF)
+2. `TEST/unit/test_submission_edge_cases.py`: 14 passed (Empty files, corrupt docs, 5,000/5,001 words, >10MB, Unicode)
+3. `TEST/unit/test_gemini_reliability.py`: 11 passed (429/503 retries, 401/403 failure, key scrubbing, empty/malformed responses)
+4. `TEST/unit/test_evaluator.py`: 11 passed (Strict score validation, 0.5 increments, independence rule)
+5. `TEST/unit/test_document_parser.py`: 12 passed (TXT, MD, PDF, DOCX, code inspection, word limits)
+6. `TEST/unit/test_config.py`: 7 passed (Settings, path resolution)
+7. `TEST/unit/test_comparison_math.py`: 7 passed (Perfect agreement, polar disagreement, signed bias, unequal weights, zero variance)
+8. `TEST/unit/test_security.py`: 6 passed (Path traversal, shell characters, SQLi, XSS, prompt injection)
+9. `TEST/unit/test_criteria_generator.py`: 6 passed (V1, V2, V3 prompts, JSON cleaning, grounding)
+10. `TEST/unit/test_comparison.py`: 5 passed (MAE, tolerance threshold, missing AI score handling)
 11. `TEST/unit/test_database_reliability.py`: 5 passed (FK constraints, atomic rollback, restart persistence, large payloads)
-12. `TEST/unit/test_security.py`: 6 passed (Path traversal, shell characters, SQLi, XSS, prompt injection)
-13. `TEST/unit/test_comparison_math.py`: 7 passed (Perfect agreement, polar disagreement, signed bias, unequal weights, zero variance)
-14. `TEST/integration/test_database.py`: 4 passed (Database initialization, schema separation)
-15. `TEST/integration/test_submission_and_rubric_db.py`: 2 passed (Multi-document aggregation, rubric approval)
-16. `TEST/integration/test_evaluation_flow.py`: 2 passed (Full evaluation lifecycle, human-only workflow)
-17. `TEST/integration/test_rubric_integrity.py`: 3 passed (Approved rubric lock after scoring, historical isolation)
-18. `TEST/integration/test_imports.py`: 12 passed (All core, UI, and config modules import cleanly)
+12. `TEST/unit/test_ai_client.py`: 5 passed (BYOK lifecycle, masking, key scrubbing)
+13. `TEST/unit/test_validators.py`: 4 passed (Pydantic schema validation)
+14. `TEST/unit/test_rubric.py`: 2 passed (Rubric editing, reordering, total marks)
+15. `TEST/integration/test_imports.py`: 12 passed (All core, UI, and config modules import cleanly)
+16. `TEST/integration/test_sample_report_workflow.py`: 3 passed (Full lifecycle, human-only mode, DOCX lifecycle on sample report)
+17. `TEST/integration/test_database.py`: 4 passed (Database initialization, schema separation)
+18. `TEST/integration/test_rubric_integrity.py`: 3 passed (Approved rubric lock after scoring, historical isolation)
+19. `TEST/integration/test_submission_and_rubric_db.py`: 2 passed (Multi-document aggregation, rubric approval)
+20. `TEST/integration/test_evaluation_flow.py`: 2 passed (Full evaluation lifecycle, human-only workflow)
 
 ---
 
@@ -373,6 +375,7 @@ All tests executed via `.venv/bin/pytest -v`.
 1. **OCR Exclusion:** Scanned PDFs without extractable text cannot be evaluated (informative warning displayed).
 2. **Deterministic Mocking in Tests:** Automated test suite uses deterministic mocks and local fixtures to verify reliability without incurring API charges or network flakiness. Live Gemini evaluation operates identically in production via BYOK.
 3. **Session-Scoped Key:** In-memory API keys are scoped to the user session; restarting the server requires re-entering the key unless set in `.env`.
+4. **Exporting Non-Scope:** In accordance with Series 5 scope prioritization, file export features (PDF/CSV download) were intentionally omitted in favor of core prototype stability.
 
 ---
 
@@ -381,20 +384,11 @@ All tests executed via `.venv/bin/pytest -v`.
 | Item | Context | Impact | Status |
 |---|---|---|---|
 | Disagreement Threshold Level | Currently set to 10.0 percentage points as specified in Section 4. | Evaluators can inspect any criterion exceeding 10 pp difference. | Confirmed per specification. |
-| Re-scoring / Re-evaluation Policy | Evaluators can edit their scores and re-run AI evaluations if desired. | Previous evaluations are updated in-place per session. | Operational in Series 3 & 4. |
+| Re-scoring / Re-evaluation Policy | Evaluators can edit their scores and re-run AI evaluations if desired. | Previous evaluations are updated in-place per session. | Operational across all series. |
 
 ---
 
-## 17. Remaining Tasks (Roadmap to Series 5)
-
-- [ ] Exporting evaluation comparisons (PDF, CSV, JSON).
-- [ ] Interface visual polish and cross-browser consistency.
-- [ ] Standalone local packaging and multi-laptop deployment instructions.
-- [ ] End-to-end user acceptance walkthrough and demonstration documentation.
-
----
-
-## 18. Master Project Checklist
+## 17. Master Project Checklist
 
 ### Series 1: Foundation, Architecture, and Local Setup
 - [x] Repository structure created cleanly and accurately.
@@ -410,7 +404,7 @@ All tests executed via `.venv/bin/pytest -v`.
 - [x] User can create an evaluation.
 - [x] User can select submission type.
 - [x] User can add optional instructions and separate reference material.
-- [x] User can paste text or upload files across 13 supported formats.
+- [x] User can paste text or upload files across all 15 supported formats.
 - [x] Combined submission limit of 5,000 words enforced (no silent truncation).
 - [x] Gemini criteria generation with 3 prompt versions (V3 default).
 - [x] Evidence grounding with verbatim excerpts and line/page citations.
@@ -434,10 +428,6 @@ All tests executed via `.venv/bin/pytest -v`.
 - [x] Comparison dashboard displays both evaluations with Plotly charts.
 - [x] Results persist in SQLite (`human_scores`, `ai_scores`).
 - [x] Evaluation history displays scores and comparison status.
-- [x] Series 1 and Series 2 regression tests pass.
-- [x] New Series 3 tests pass (14 new tests, 67 total).
-- [x] DOCS/report.md is updated.
-- [x] DOCS/journal.md has a new appended entry.
 
 ### Series 4: Testing and Reliability
 - [x] Critical scoring validation: AI scores exceeding max, negative, or invalid increments rejected (no silent clamping).
@@ -448,14 +438,16 @@ All tests executed via `.venv/bin/pytest -v`.
 - [x] Database reliability (missing file init, foreign key constraints, atomic rollback on error, persistence across restarts).
 - [x] Security and abuse checks (path traversal sanitization, SQL injection immunity, XSS preservation as safe text, prompt injection isolation).
 - [x] Comparison mathematics (MAE correctness, Pearson correlation zero-variance protection, signed directional bias, exact percentages).
-- [x] Complete test suite passes (118 tests passed, 0 failed).
-- [x] DOCS/report.md updated with reliability audit.
-- [x] DOCS/journal.md updated with append-only entry.
 
-### Series 5: Product Completion and Portability (Pending)
-- [ ] Interface refinement.
-- [ ] Exporting.
-- [ ] Documentation.
-- [ ] Installation on another laptop.
-- [ ] Demonstration.
-- [ ] Final acceptance testing.
+### Series 5: Prototype Stabilization, Testing and Final Verification
+- [x] Comprehensive audit of existing codebase and elimination of all identified defects.
+- [x] Realistic 1,338-word technical report fixture created (`TEST/fixtures/sample_report.md` & `.docx`).
+- [x] Individual verification of all 15 supported formats (TXT, MD, PDF, DOCX, PY, CPP, H, HPP, JAVA, JS, TS, JSON, HTML, CSS, SQL).
+- [x] Full end-to-end evaluation lifecycle executed with sample report.
+- [x] Human-only evaluation mode verified without Gemini API key.
+- [x] Gating rules preserved: rubric approval mandatory, AI scoring optional, scores hidden before human submission.
+- [x] Automated test suite expanded to 150 tests (100% pass rate in 1.00s).
+- [x] Comprehensive test report generated at `TEST/sample_test_report.md`.
+- [x] UI stabilized and verified locally on port 8507 (`HTTP 200 OK`).
+- [x] Final project report (`DOCS/report.md`) updated.
+- [x] Final append-only journal entry added to `DOCS/journal.md`.

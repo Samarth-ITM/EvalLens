@@ -68,8 +68,8 @@ def main() -> None:
 
     st.sidebar.markdown("---")
     st.sidebar.caption(
-        f"**EvalLens v0.3.0**\n\n"
-        "Series 3: Evaluation & Comparison\n\n"
+        f"**EvalLens v1.0.0**\n\n"
+        "Human and AI Evaluation Comparison Tool\n\n"
         "AI assists evaluation; human controls the final result."
     )
 
