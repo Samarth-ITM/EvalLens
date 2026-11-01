@@ -264,3 +264,4 @@ EvalLens is ready for educators, teaching assistants, peer reviewers, and techni
 ## Conclusion
 
 EvalLens v0.6.0 has successfully passed independent quality verification on genuine real-world documents. It demonstrates high text extraction fidelity across 15 formats, strong rubric generation quality, 86.2% human-AI score agreement, 91.4% verbatim evidence grounding, zero hallucinated facts, and sub-second token economics on Google's official `gemini-3.5-flash-lite` model.
+
