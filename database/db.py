@@ -319,9 +319,25 @@ def save_approved_rubric(
     """
     Save the human-approved rubric and its criteria inside a single transaction.
     Updates the evaluation status to 'rubric_approved'.
+    Enforces rubric integrity: once scoring has commenced (human or AI), the rubric cannot be modified.
     """
     with get_connection(db_path) as conn:
         cursor = conn.cursor()
+
+        # Enforce rubric integrity: reject modifications once scoring has commenced
+        cursor.execute("SELECT COUNT(*) FROM human_scores WHERE evaluation_id = ?;", (evaluation_id,))
+        h_row = cursor.fetchone()
+        human_count = h_row[0] if h_row else 0
+
+        cursor.execute("SELECT COUNT(*) FROM ai_scores WHERE evaluation_id = ?;", (evaluation_id,))
+        a_row = cursor.fetchone()
+        ai_count = a_row[0] if a_row else 0
+
+        if human_count > 0 or ai_count > 0:
+            raise ValueError(
+                f"Cannot modify approved rubric for evaluation {evaluation_id}: scoring has already commenced. "
+                "Approved criteria and existing scores are protected. Create a new evaluation to evaluate with a modified rubric."
+            )
 
         # Insert approved rubric
         cursor.execute(

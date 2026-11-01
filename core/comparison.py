@@ -70,7 +70,43 @@ class EvaluationComparisonSummary:
     total_difference: Optional[float] = None
     mae: Optional[float] = None
     agreement_percentage: Optional[float] = None
+    directional_bias: Optional[float] = None
+    correlation: Optional[float] = None
     criteria_comparisons: List[CriterionComparison] = field(default_factory=list)
+
+
+def calculate_pearson_correlation(
+    human_scores: List[float],
+    ai_scores: List[float],
+) -> Optional[float]:
+    """
+    Calculate Pearson correlation coefficient r between paired scores.
+    Handles zero variance gracefully without crashing (division by zero).
+    Returns None if:
+    - lengths do not match or fewer than 2 pairs
+    - zero variance in either series (standard deviation == 0)
+    """
+    if len(human_scores) != len(ai_scores) or len(human_scores) < 2:
+        return None
+
+    n = len(human_scores)
+    mean_h = sum(human_scores) / n
+    mean_a = sum(ai_scores) / n
+
+    diff_h = [h - mean_h for h in human_scores]
+    diff_a = [a - mean_a for a in ai_scores]
+
+    var_h = sum(d * d for d in diff_h)
+    var_a = sum(d * d for d in diff_a)
+
+    if var_h <= 1e-9 or var_a <= 1e-9:
+        # Zero variance: constant scores, correlation undefined
+        return None
+
+    cov = sum(dh * da for dh, da in zip(diff_h, diff_a))
+    r = cov / ((var_h * var_a) ** 0.5)
+    r_clamped = max(-1.0, min(1.0, float(r)))
+    return round(r_clamped, 4)
 
 
 def calculate_normalized_score(score: float, max_marks: float) -> float:
@@ -215,6 +251,10 @@ def calculate_comparison(
         mae = None
         agreement_percentage = None
 
+    paired_h: List[float] = [c.human_score for c in criteria_comparisons if c.ai_score is not None]
+    paired_a: List[float] = [c.ai_score for c in criteria_comparisons if c.ai_score is not None]
+    corr = calculate_pearson_correlation(paired_h, paired_a)
+
     return EvaluationComparisonSummary(
         evaluation_id=evaluation_id,
         evaluation_title=evaluation_title,
@@ -227,5 +267,7 @@ def calculate_comparison(
         total_difference=total_diff,
         mae=mae,
         agreement_percentage=agreement_percentage,
+        directional_bias=total_diff,
+        correlation=corr,
         criteria_comparisons=criteria_comparisons,
     )

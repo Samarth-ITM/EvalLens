@@ -394,3 +394,68 @@ Series 4 (Testing and Reliability):
 2. API failure, rate limiting, and timeout resilience handling.
 3. Stress testing with large documents near the 5,000-word limit.
 4. Security and reliability auditing.
+
+
+---
+
+## Entry 4: 2026-11-01 — Series 4: Reliability, Validation and Security Testing
+
+### Objectives
+1. Perform comprehensive reliability audit across normal, invalid, unexpected, and failure conditions.
+2. Fix critical scoring validation in `core/evaluator.py`: strictly reject AI scores exceeding criterion maximum marks, negative scores, or scores not adhering to 0.5 increments (eliminate silent clamping).
+3. Verify evaluation independence at both UI presentation and backend database query levels.
+4. Enforce approved rubric integrity: lock approved rubrics against mutation once human or AI scoring has commenced.
+5. Implement submission edge case testing (empty files, corrupt PDF/DOCX, unsupported formats, duplicate filenames, 5,000/5,001 word boundaries, >10MB, Unicode).
+6. Implement Gemini API transient error retry handling (max 2 retries with exponential backoff on 429, 500, 502, 503, 504, timeouts, connection resets; immediate failure on 400, 401, 403).
+7. Guarantee zero API key exposure in error messages, logs, or UI presentations.
+8. Verify database reliability (initialization on missing file, foreign key enforcement, transaction rollback, persistence across restarts, large payloads).
+9. Audit security and abuse resistance (path traversal, dangerous filenames, SQL injection, XSS safe storage, prompt injection boundaries).
+10. Verify comparison mathematics (MAE correctness, Pearson correlation zero-variance protection, signed directional bias, exact percentages).
+
+### Implementation Details & Changes Made
+1. **Critical Scoring Validation (`core/evaluator.py`):**
+   - Removed silent score clamping (`if final_score > max_allowed: final_score = max_allowed`).
+   - Implemented strict validation rejecting exceeding scores, negative scores, and non-0.5 increments with descriptive `ValueError`.
+   - Added validation ensuring returned criterion IDs match the approved rubric, all approved criteria are evaluated, and no duplicates exist.
+2. **Approved Rubric Integrity (`database/db.py`):**
+   - Added guard in `save_approved_rubric`: queries `human_scores` and `ai_scores` within the transaction and raises `ValueError` if scoring has commenced, protecting existing criteria and scores.
+3. **Submission Disambiguation & Path Traversal (`core/submission.py`):**
+   - Updated `prepare_submission` and `save_submission_to_db` to disambiguate duplicate filenames (e.g. `main.py`, `main_2.py`).
+   - Hardened `sanitize_filename` and added verification that destination paths reside strictly within `UPLOADS_DIR`.
+4. **Prompt Injection Boundaries (`core/criteria_generator.py` & `core/evaluator.py`):**
+   - Enclosed user submission text inside `<SUBMISSION_CONTENT>` XML tags with explicit system instructions to ignore prompt overrides, instructions, or requests for full marks contained in the submission text.
+5. **Transient Retries & Key Scrubbing (`core/ai_client.py`):**
+   - Implemented `is_transient_error()` classifying rate limits, server errors, timeouts, and network resets as transient.
+   - Implemented `execute_with_transient_retry()` with up to 2 retries and exponential backoff.
+   - Enhanced `sanitize_error_message()` to replace raw keys with `[PROTECTED_API_KEY]`.
+6. **Comparison Mathematics (`core/comparison.py`):**
+   - Added `calculate_pearson_correlation()` with zero-variance safety (returns `None` without division by zero).
+   - Added `directional_bias` (`human_total - ai_total`) and `correlation` fields to `EvaluationComparisonSummary`.
+
+### Test Strategy & Files Created / Modified
+- Modified `TEST/unit/test_evaluator.py` to replace clamping tests with strict validation tests (exceeding score, negative score, invalid increment, missing criteria, duplicate criteria).
+- Created `TEST/unit/test_submission_edge_cases.py` (14 tests covering empty files, corrupt PDF/DOCX, 5,000/5,001 words, >10MB limit, Unicode, duplicate filenames).
+- Created `TEST/unit/test_gemini_reliability.py` (11 tests covering transient retries, immediate 401/403 failure, key scrubbing, empty/malformed responses, context window errors).
+- Created `TEST/unit/test_database_reliability.py` (5 tests covering missing file init, foreign keys, transaction rollback, persistence, large text payloads).
+- Created `TEST/unit/test_security.py` (6 tests covering path traversal, shell metacharacters, SQL injection, XSS storage, prompt injection boundaries, key masking).
+- Created `TEST/unit/test_comparison_math.py` (7 tests covering perfect agreement, complete divergence, fractional scores, unequal weights, zero variance, signed bias).
+- Created `TEST/integration/test_rubric_integrity.py` (3 tests verifying rubric mutation locking after human or AI scoring and multi-evaluation isolation).
+
+### Actual Test Results
+- Complete test suite: **118 passed in 0.80s** (0 failed, 0 errors).
+- Streamlit application: Started on port 8506, probed via `curl -I http://localhost:8506/`, returned `HTTP/1.1 200 OK`. Background task cleanly terminated.
+
+### Defects Discovered & Root Cause Analysis
+1. **AI Score Clamping:** Previous implementation clamped AI scores exceeding criterion maximum to the maximum value instead of raising an error. Corrected to reject with `ValueError`.
+2. **Duplicate Filename Collision:** Multiple uploaded files with identical basenames from different locations overwrote each other. Corrected by tracking filename frequencies and appending numerical suffixes (`_2`, `_3`).
+3. **Potential Rubric Mutation After Scoring:** If an evaluator edited a rubric after scoring started, criteria IDs could shift or invalidate existing scores. Corrected by locking approved rubrics against edits once scoring has started.
+4. **Division by Zero in Correlation:** Constant scores across criteria would yield zero variance and divide by zero. Corrected by checking variance against epsilon (`1e-9`) and returning `None`.
+
+### Confidence Assessment
+High. The codebase has undergone comprehensive edge-case and failure testing with 118 passing tests covering units, integrations, database transactions, API failure simulations, and security boundaries.
+
+### Next Steps (Roadmap to Series 5)
+1. Exporting evaluation comparisons (PDF, CSV, JSON).
+2. Interface visual polish and responsive layout refinement.
+3. Standalone packaging and portable installation documentation for other laptops.
+4. End-to-end user acceptance walkthrough and demonstration preparation.

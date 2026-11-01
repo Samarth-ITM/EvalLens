@@ -2,7 +2,7 @@
 
 **Product Title:** Human and AI Evaluation Comparison Tool  
 **Category:** AI Evaluation  
-**Current Status:** Series 3 Complete (Series 3 of 5)  
+**Current Status:** Series 4 Complete (Series 4 of 5)  
 **Maintained by:** Implementation Agent (Antigravity)  
 **Product Owner & System Architect:** User  
 
@@ -14,9 +14,11 @@ EvalLens is an AI evaluation comparison tool designed to help evaluators and org
 
 The workflow begins by accepting submissions (documents, source code, or pasted text) across 13 formats. Google Gemini AI analyzes the work to propose structured, evidence-grounded criteria. The human evaluator reviews, refines, reorders, and explicitly approves the rubric before any evaluation occurs. Once the rubric is approved:
 1. **Independent Human Scoring:** The evaluator scores each criterion with optional qualitative feedback.
-2. **Independence Guardrail:** AI scores, recommendations, and explanations remain strictly hidden from the evaluator until human scoring is finalized and submitted.
+2. **Independence Guardrail:** AI scores, recommendations, and explanations remain strictly hidden from the evaluator until human scoring is finalized and submitted (enforced at both UI and backend query levels).
 3. **Optional Independent AI Scoring:** Gemini scores the original submission against the exact approved rubric criteria, providing justifications, cited evidence, and uncertainty notes without hallucinating criteria or facts.
-4. **Comparison Analytics & Dashboard:** The application computes normalized score differences, Mean Absolute Error (MAE), and agreement percentages within a 10-percentage-point tolerance, displaying side-by-side alignment in a clean Plotly chart and criterion-level drill-down table.
+4. **Strict Score Validation:** AI scores exceeding maximum marks, negative scores, or invalid increments are strictly rejected (no silent clamping).
+5. **Approved Rubric Integrity:** Once human or AI scoring has commenced, the approved rubric criteria cannot be silently modified or overwritten.
+6. **Comparison Analytics & Dashboard:** The application computes normalized score differences, Mean Absolute Error (MAE), agreement percentages within a 10-percentage-point tolerance, signed directional bias, and Pearson correlation (with zero-variance safety), displaying side-by-side alignment in a clean Plotly chart and criterion-level drill-down table.
 
 ### Core Principle
 **AI assists the evaluation process; the human controls the final evaluation.** Human scores represent the authoritative evaluation; AI suggestions serve solely to support consistency and highlight potential oversights.
@@ -25,9 +27,9 @@ The workflow begins by accepting submissions (documents, source code, or pasted 
 
 ## 2. Current Development Phase
 
-- **Active Series:** Series 3 of 5 (Human Evaluation, AI Evaluation and Comparison)
-- **Phase Goal:** Implement the human scoring interface with validated bounds and 0.5 decimal increments, build the independent AI scoring engine using Gemini on approved rubrics, enforce the independence rule (hiding AI scores until human submission), calculate normalized comparison metrics (MAE and 10 pp agreement rate), create a Plotly-backed comparison dashboard, and persist scores separately in SQLite.
-- **Series 3 Status:** Complete and verified.
+- **Active Series:** Series 4 of 5 (Reliability, Validation and Security Testing)
+- **Phase Goal:** Verify that EvalLens behaves correctly under normal, invalid, unexpected, and failure conditions. Fix AI score clamping into strict validation rejection. Enforce evaluation independence at UI and backend query levels. Enforce approved rubric integrity after scoring commences. Test submission edge cases (empty files, corrupt documents, unsupported formats, duplicate filenames, 5,000/5,001 word boundaries, >10MB limits, Unicode). Implement Gemini API transient error retry (max 2 retries with backoff on 429/503/timeouts; immediate failure on 400/401). Verify zero API key exposure in errors/logs. Test database reliability, foreign keys, transaction rollback, and restart persistence. Test security (path traversal, SQL injection, XSS, prompt injection). Verify mathematical precision of MAE, correlation zero-variance protection, and directional bias.
+- **Series 4 Status:** Complete and verified (118 tests passing, 0 failures).
 
 ---
 
@@ -56,17 +58,25 @@ The workflow begins by accepting submissions (documents, source code, or pasted 
 | Human Scoring Interface (0.5 increments, 0 to max_marks) | Series 3 | Implemented | Tested and passed |
 | Human Score Validation & Bound Enforcement | Series 3 | Implemented | Tested and passed |
 | Progress Saving (Draft) & Final Submission Actions | Series 3 | Implemented | Tested and passed |
-| Independence Guardrail (AI scores strictly hidden before human submission) | Series 3 | Implemented | Tested and passed |
+| Independence Guardrail (AI scores strictly hidden before human submission) | Series 3 & 4 | Implemented | Tested and passed (UI & backend) |
 | Independent AI Scoring on Exact Approved Rubric | Series 3 | Implemented | Tested and passed |
-| AI Score Validation & Clamping to Criterion Maximum | Series 3 | Implemented | Tested and passed |
+| AI Score Rejection (Strict validation: no silent clamping, 0.5 increments) | Series 4 | Implemented | Tested and passed |
 | AI Evidence & Uncertainty Grounding | Series 3 | Implemented | Tested and passed |
 | Comparison Analytics (Raw diff, Normalized diff, MAE, Agreement %) | Series 3 | Implemented | Tested and passed |
+| Directional Bias & Zero-Variance Correlation Handling | Series 4 | Implemented | Tested and passed |
 | Missing AI Score Handling (Excluded from MAE, never treated as zero) | Series 3 | Implemented | Tested and passed |
 | Human-Only Workflow (Complete scoring and review without Gemini) | Series 3 | Implemented | Tested and passed |
 | Comparison Dashboard (Plotly bar chart + criterion drill-down table) | Series 3 | Implemented | Tested and passed |
 | Disagreement Highlighting (> 10 percentage points difference) | Series 3 | Implemented | Tested and passed |
 | Separate SQLite Score Persistence (`human_scores` & `ai_scores`) | Series 3 | Implemented | Tested and passed |
-| Comprehensive Edge Case & Reliability Suite | Series 4 | Not implemented | Not tested |
+| Approved Rubric Integrity (Locked against mutation once scoring begins) | Series 4 | Implemented | Tested and passed |
+| Multi-Upload Duplicate Filename Disambiguation | Series 4 | Implemented | Tested and passed |
+| Path Traversal Protection (`../../` stripped, uploads boundary validated) | Series 4 | Implemented | Tested and passed |
+| Prompt Injection Isolation (`<SUBMISSION_CONTENT>` boundary in prompts) | Series 4 | Implemented | Tested and passed |
+| API Transient Retry (Max 2 retries with backoff on 429/503/timeouts) | Series 4 | Implemented | Tested and passed |
+| Zero API Key Disclosure (Automatic scrubbing in error messages & logs) | Series 4 | Implemented | Tested and passed |
+| Database Integrity (FK enforcement, atomic transaction rollback) | Series 4 | Implemented | Tested and passed |
+| Comprehensive Edge Case & Reliability Suite (118 tests) | Series 4 | Implemented | Tested and passed |
 | Exporting & Multi-Platform Packaging | Series 5 | Not implemented | Not tested |
 
 ---
@@ -288,34 +298,103 @@ All tests executed via `.venv/bin/pytest -v`.
 
 ---
 
-## 13. Known Limitations
+## 13. Series 4 Reliability Audit & Findings
 
-1. **OCR Exclusion:** Scanned PDFs without extractable text cannot be evaluated (informative warning displayed).
-2. **Deterministic Mocking in Tests:** Automated tests use deterministic mocks to avoid API cost and network flakiness. Live Gemini evaluation operates identically in production via BYOK.
-3. **Session-Scoped Key:** API keys are retained in session memory; restarting the server requires re-entering the key unless set in `.env`.
+### 13.1 Critical Scoring Validation (No Clamping)
+- **Defect Identified:** Previously in Series 3, `core/evaluator.py` clamped exceeding AI scores to the criterion maximum (`if final_score > max_allowed: final_score = max_allowed`).
+- **Correction Applied:** Replaced clamping with strict validation rejection. The function `parse_and_validate_ai_response` now validates that every score is a finite float, non-negative, does not exceed `max_score`, conforms to permitted `0.5` step increments, belongs to an approved criterion in the rubric, contains no duplicates, and leaves no criteria un-evaluated. Violations immediately raise `ValueError` and are rejected from persistence.
+
+### 13.2 Evaluation Independence Verification
+- **UI and Backend Enforcement:** The independence guardrail was audited across UI presentation layers and backend database query layers.
+- In `database/db.py`, `has_human_scores` must return `True` before `get_ai_scores` is invoked in the comparison dashboard.
+- Verified that AI evaluation execution uses `ON CONFLICT` targeting only `ai_scores`, strictly preventing any modification or overwriting of `human_scores`.
+- Human evaluators can complete the entire workflow (from rubric review to scoring and history viewing) without configuring a Gemini API key.
+
+### 13.3 Approved Rubric Integrity
+- **Mutation Lock:** Once human or AI scoring has commenced for an evaluation (`has_human_scores` or `has_ai_scores`), `save_approved_rubric` raises `ValueError`, refusing to mutate the rubric or alter criteria IDs.
+- **Historical Score Association:** Scores in `human_scores` and `ai_scores` remain permanently linked to their original `criterion_id` via SQLite foreign keys.
+- **Re-evaluation Workflow:** Evaluators wishing to evaluate work with an edited rubric create a new evaluation session, keeping historical evaluations and scores intact.
+
+### 13.4 Submission Edge Cases & Input Resilience
+- **Boundary Verification:** 5,000 words passes; 5,001 words is rejected with detected word count.
+- **Corrupted / Blank Documents:** Empty files (0 bytes) parse gracefully with 0 words; corrupted PDFs or DOCXs generate clear extraction warnings without unhandled exceptions; blank/image-only PDFs generate a scanned PDF warning.
+- **Unsupported Formats & Size Limits:** Extensions outside the 13 supported formats (.zip, .exe, .png) and files exceeding 10 MB are rejected with explicit errors.
+- **Multi-File Uploads:** Duplicate filenames in multiple uploads (e.g. two `main.py` files) are disambiguated as `main.py`, `main_2.py`.
+- **Unicode Support:** Tested and verified on emojis, accents, and CJK text. Long lines (15,000+ characters) parse without buffer issues.
+
+### 13.5 Gemini API Resilience & Security
+- **Transient Retries:** `execute_with_transient_retry` implements exponential backoff (base delay 0.5s) up to 2 retries for transient errors: rate limits (429), server errors (500, 502, 503, 504), network timeouts, and connection resets.
+- **Immediate Failure on Non-Transient Errors:** 400 (Bad Request), 401 (Invalid Key), 403 (Permission Denied), and schema validation failures fail immediately without useless retries.
+- **Zero API Key Leakage:** `sanitize_error_message` scrubs API keys (`AIzaSy...`) in all exception strings and replaces them with `[PROTECTED_API_KEY]`. Masked keys in the UI show only the first 4 and last 4 characters.
+
+### 13.6 Security & Abuse Resistance
+- **Path Traversal Protection:** Uploaded filenames are sanitized with `sanitize_filename` (stripping directory traversal dots `..`, separators `/` and `\`, and special characters), and verified against `is_relative_to(UPLOADS_DIR)`.
+- **SQL Injection Immunity:** All database operations strictly use parameterized queries (`?` placeholders). Payloads like `'; DROP TABLE evaluations; --` and `' OR '1'='1` are safely stored as literal strings.
+- **Prompt Injection Isolation:** Both criteria generation and AI scoring prompts isolate untrusted user submission text inside `<SUBMISSION_CONTENT>` XML boundaries with explicit system instructions to ignore prompt overrides, adversarial commands, or requests for full marks.
+
+### 13.7 Comparison Mathematics
+- **Formula Verification:** Verified exact mathematical precision of normalized scores, MAE, and agreement percentage.
+- **Signed Directional Bias:** Calculated as `human_total - ai_total` (positive when human > AI; negative when AI > human).
+- **Pearson Correlation Zero-Variance Safety:** Added `calculate_pearson_correlation` with graceful handling when score variance is zero (returns `None` without division-by-zero crashes).
 
 ---
 
-## 14. Open Decisions
+## 14. Actual Test Results
+
+- **Total Tests Collected & Executed:** 118
+- **Total Tests Passed:** 118 (100% pass rate)
+- **Total Tests Failed:** 0
+- **Execution Time:** ~0.80 seconds
+
+### Test Breakdown by Module:
+1. `TEST/unit/test_ai_client.py`: 5 passed (BYOK lifecycle, masking, key scrubbing)
+2. `TEST/unit/test_validators.py`: 4 passed (Pydantic schema validation)
+3. `TEST/unit/test_config.py`: 7 passed (Settings, path resolution)
+4. `TEST/unit/test_document_parser.py`: 12 passed (TXT, MD, PDF, DOCX, code inspection, word limits)
+5. `TEST/unit/test_criteria_generator.py`: 6 passed (V1, V2, V3 prompts, JSON cleaning, grounding)
+6. `TEST/unit/test_rubric.py`: 2 passed (Rubric editing, reordering, total marks)
+7. `TEST/unit/test_evaluator.py`: 11 passed (Strict score validation, 0.5 increments, independence rule)
+8. `TEST/unit/test_comparison.py`: 5 passed (MAE, tolerance threshold, missing AI score handling)
+9. `TEST/unit/test_submission_edge_cases.py`: 14 passed (Empty files, corrupt docs, 5,000/5,001 words, >10MB, Unicode)
+10. `TEST/unit/test_gemini_reliability.py`: 11 passed (429/503 retries, 401/403 failure, key scrubbing, empty/malformed responses)
+11. `TEST/unit/test_database_reliability.py`: 5 passed (FK constraints, atomic rollback, restart persistence, large payloads)
+12. `TEST/unit/test_security.py`: 6 passed (Path traversal, shell characters, SQLi, XSS, prompt injection)
+13. `TEST/unit/test_comparison_math.py`: 7 passed (Perfect agreement, polar disagreement, signed bias, unequal weights, zero variance)
+14. `TEST/integration/test_database.py`: 4 passed (Database initialization, schema separation)
+15. `TEST/integration/test_submission_and_rubric_db.py`: 2 passed (Multi-document aggregation, rubric approval)
+16. `TEST/integration/test_evaluation_flow.py`: 2 passed (Full evaluation lifecycle, human-only workflow)
+17. `TEST/integration/test_rubric_integrity.py`: 3 passed (Approved rubric lock after scoring, historical isolation)
+18. `TEST/integration/test_imports.py`: 12 passed (All core, UI, and config modules import cleanly)
+
+---
+
+## 15. Known Limitations
+
+1. **OCR Exclusion:** Scanned PDFs without extractable text cannot be evaluated (informative warning displayed).
+2. **Deterministic Mocking in Tests:** Automated test suite uses deterministic mocks and local fixtures to verify reliability without incurring API charges or network flakiness. Live Gemini evaluation operates identically in production via BYOK.
+3. **Session-Scoped Key:** In-memory API keys are scoped to the user session; restarting the server requires re-entering the key unless set in `.env`.
+
+---
+
+## 16. Open Decisions
 
 | Item | Context | Impact | Status |
 |---|---|---|---|
 | Disagreement Threshold Level | Currently set to 10.0 percentage points as specified in Section 4. | Evaluators can inspect any criterion exceeding 10 pp difference. | Confirmed per specification. |
-| Re-scoring / Re-evaluation Policy | Evaluators can edit their scores and re-run AI evaluations if desired. | Previous evaluations are updated in-place per session. | Operational in Series 3. |
+| Re-scoring / Re-evaluation Policy | Evaluators can edit their scores and re-run AI evaluations if desired. | Previous evaluations are updated in-place per session. | Operational in Series 3 & 4. |
 
 ---
 
-## 15. Remaining Tasks (Roadmap to Series 4)
+## 17. Remaining Tasks (Roadmap to Series 5)
 
-- [ ] Comprehensive unit and integration test coverage for edge cases.
-- [ ] Network failure and API rate limit resilience checks.
-- [ ] Large document stress testing near the 5,000-word limit.
-- [ ] Input sanitization, SQL injection resistance, and security auditing.
-- [ ] Error boundary hardening so UI never breaks on malformed state.
+- [ ] Exporting evaluation comparisons (PDF, CSV, JSON).
+- [ ] Interface visual polish and cross-browser consistency.
+- [ ] Standalone local packaging and multi-laptop deployment instructions.
+- [ ] End-to-end user acceptance walkthrough and demonstration documentation.
 
 ---
 
-## 16. Master Project Checklist
+## 18. Master Project Checklist
 
 ### Series 1: Foundation, Architecture, and Local Setup
 - [x] Repository structure created cleanly and accurately.
@@ -360,11 +439,18 @@ All tests executed via `.venv/bin/pytest -v`.
 - [x] DOCS/report.md is updated.
 - [x] DOCS/journal.md has a new appended entry.
 
-### Series 4: Testing and Reliability (Pending)
-- [ ] Unit and integration tests for edge cases.
-- [ ] API failure and retry handling.
-- [ ] Validation and stress testing.
-- [ ] Security and reliability checks.
+### Series 4: Testing and Reliability
+- [x] Critical scoring validation: AI scores exceeding max, negative, or invalid increments rejected (no silent clamping).
+- [x] Independence rule verified at UI and backend query levels (AI scores hidden before human submission; AI cannot overwrite human scores; human-only workflow supported).
+- [x] Approved rubric integrity enforced: approved rubrics cannot be silently modified once scoring starts; historical scores preserved.
+- [x] Comprehensive submission testing (empty text/files, corrupt PDF/DOCX, unsupported extensions, duplicate filenames, 5,000/5,001 words, >10MB, Unicode).
+- [x] Gemini API reliability (transient retries with exponential backoff on 429/503/timeouts; immediate failure on 400/401; zero key exposure).
+- [x] Database reliability (missing file init, foreign key constraints, atomic rollback on error, persistence across restarts).
+- [x] Security and abuse checks (path traversal sanitization, SQL injection immunity, XSS preservation as safe text, prompt injection isolation).
+- [x] Comparison mathematics (MAE correctness, Pearson correlation zero-variance protection, signed directional bias, exact percentages).
+- [x] Complete test suite passes (118 tests passed, 0 failed).
+- [x] DOCS/report.md updated with reliability audit.
+- [x] DOCS/journal.md updated with append-only entry.
 
 ### Series 5: Product Completion and Portability (Pending)
 - [ ] Interface refinement.

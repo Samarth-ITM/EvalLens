@@ -110,8 +110,8 @@ def test_parse_and_validate_ai_response_valid() -> None:
     assert scores[1]["score"] == 4.0
 
 
-def test_parse_ai_response_clamps_exceeding_scores() -> None:
-    """Verify that if Gemini returns a score exceeding criterion maximum, it is clamped safely."""
+def test_parse_ai_response_rejects_exceeding_scores() -> None:
+    """Verify that if Gemini returns a score exceeding criterion maximum, it is strictly rejected."""
     criteria = [{"id": 1, "name": "Security", "max_score": 5.0}]
     raw_json = json.dumps(
         {
@@ -127,9 +127,124 @@ def test_parse_ai_response_clamps_exceeding_scores() -> None:
         }
     )
 
-    scores = parse_and_validate_ai_response(raw_json, criteria, "gemini-3.8-flash")
-    assert len(scores) == 1
-    assert scores[0]["score"] == 5.0  # Clamped to max_score
+    with pytest.raises(ValueError) as excinfo:
+        parse_and_validate_ai_response(raw_json, criteria, "gemini-3.8-flash")
+    assert "exceeds the maximum allowed marks" in str(excinfo.value)
+
+
+def test_parse_ai_response_rejects_negative_scores() -> None:
+    """Verify that negative AI scores are strictly rejected."""
+    criteria = [{"id": 1, "name": "Security", "max_score": 5.0}]
+    raw_json = json.dumps(
+        {
+            "scores": [
+                {
+                    "criterion_id": 1,
+                    "criterion_name": "Security",
+                    "score": -1.0,
+                    "max_marks": 5.0,
+                    "reasoning": "Poor",
+                }
+            ]
+        }
+    )
+    with pytest.raises(ValueError) as excinfo:
+        parse_and_validate_ai_response(raw_json, criteria, "gemini-3.8-flash")
+    assert "greater than or equal to 0" in str(excinfo.value) or "cannot be negative" in str(excinfo.value)
+
+
+def test_parse_ai_response_rejects_invalid_increment() -> None:
+    """Verify that AI scores not conforming to 0.5 step increments are rejected."""
+    criteria = [{"id": 1, "name": "Security", "max_score": 5.0}]
+    raw_json = json.dumps(
+        {
+            "scores": [
+                {
+                    "criterion_id": 1,
+                    "criterion_name": "Security",
+                    "score": 3.7,  # Invalid increment
+                    "max_marks": 5.0,
+                    "reasoning": "Valid reasoning",
+                }
+            ]
+        }
+    )
+    with pytest.raises(ValueError) as excinfo:
+        parse_and_validate_ai_response(raw_json, criteria, "gemini-3.8-flash")
+    assert "0.5 increment" in str(excinfo.value)
+
+
+def test_parse_ai_response_rejects_unknown_criterion_id() -> None:
+    """Verify that responses referencing criterion IDs outside the approved rubric are rejected."""
+    criteria = [{"id": 1, "name": "Security", "max_score": 5.0}]
+    raw_json = json.dumps(
+        {
+            "scores": [
+                {
+                    "criterion_id": 999,  # Unknown ID
+                    "criterion_name": "Ghost Criterion",
+                    "score": 4.0,
+                    "max_marks": 5.0,
+                    "reasoning": "Unknown",
+                }
+            ]
+        }
+    )
+    with pytest.raises(ValueError) as excinfo:
+        parse_and_validate_ai_response(raw_json, criteria, "gemini-3.8-flash")
+    assert "does not belong to the approved rubric" in str(excinfo.value)
+
+
+def test_parse_ai_response_rejects_duplicate_criterion_id() -> None:
+    """Verify that duplicate criterion evaluations in AI response are rejected."""
+    criteria = [{"id": 1, "name": "Security", "max_score": 5.0}]
+    raw_json = json.dumps(
+        {
+            "scores": [
+                {
+                    "criterion_id": 1,
+                    "criterion_name": "Security",
+                    "score": 4.0,
+                    "max_marks": 5.0,
+                    "reasoning": "First evaluation",
+                },
+                {
+                    "criterion_id": 1,
+                    "criterion_name": "Security",
+                    "score": 4.5,
+                    "max_marks": 5.0,
+                    "reasoning": "Duplicate evaluation",
+                },
+            ]
+        }
+    )
+    with pytest.raises(ValueError) as excinfo:
+        parse_and_validate_ai_response(raw_json, criteria, "gemini-3.8-flash")
+    assert "Duplicate score returned" in str(excinfo.value)
+
+
+def test_parse_ai_response_rejects_missing_criteria() -> None:
+    """Verify that omitting criteria from the approved rubric is rejected."""
+    criteria = [
+        {"id": 1, "name": "Security", "max_score": 5.0},
+        {"id": 2, "name": "Code Quality", "max_score": 5.0},
+    ]
+    raw_json = json.dumps(
+        {
+            "scores": [
+                {
+                    "criterion_id": 1,
+                    "criterion_name": "Security",
+                    "score": 4.0,
+                    "max_marks": 5.0,
+                    "reasoning": "Evaluated only criterion 1",
+                }
+            ]
+        }
+    )
+    with pytest.raises(ValueError) as excinfo:
+        parse_and_validate_ai_response(raw_json, criteria, "gemini-3.8-flash")
+    assert "Missing scores for approved criteria" in str(excinfo.value)
 
 
 def test_parse_ai_response_rejects_malformed_json() -> None:

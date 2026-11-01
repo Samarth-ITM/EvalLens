@@ -41,7 +41,9 @@ class PreparedSubmission:
 
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename to prevent directory traversal or invalid characters."""
-    clean = re.sub(r"[^\w\.-]", "_", Path(filename).name)
+    base_name = Path(filename).name
+    clean = re.sub(r"[^\w\.-]", "_", base_name)
+    clean = clean.lstrip(".")
     return clean or "unnamed_file"
 
 
@@ -56,7 +58,7 @@ def prepare_submission(
 ) -> PreparedSubmission:
     """
     Parse and validate text input and all uploaded files.
-    Enforces the combined 5,000-word limit.
+    Enforces the combined 5,000-word limit. Disambiguates duplicate filenames.
     """
     title_clean = title.strip()
     if not title_clean:
@@ -73,10 +75,20 @@ def prepare_submission(
         parsed_docs.append(parsed_pasted)
         all_warnings.extend(parsed_pasted.warnings)
 
-    # 2. Parse uploaded files
+    # 2. Parse uploaded files with duplicate name disambiguation
     if uploaded_files:
+        seen_names: Dict[str, int] = {}
         for fname, fbytes in uploaded_files:
-            parsed_doc = parse_uploaded_file(fbytes, fname)
+            clean_name = sanitize_filename(fname)
+            if clean_name in seen_names:
+                seen_names[clean_name] += 1
+                p = Path(clean_name)
+                unique_name = f"{p.stem}_{seen_names[clean_name]}{p.suffix}"
+            else:
+                seen_names[clean_name] = 1
+                unique_name = clean_name
+
+            parsed_doc = parse_uploaded_file(fbytes, unique_name)
             parsed_docs.append(parsed_doc)
             all_warnings.extend(parsed_doc.warnings)
 
@@ -137,11 +149,20 @@ def save_submission_to_db(
         db_path=db_path,
     )
 
-    # Map filename to file_bytes if provided
+    # Map filename to file_bytes if provided, matching duplicate disambiguation
     file_bytes_map: Dict[str, bytes] = {}
     if uploaded_files_data:
+        seen_names: Dict[str, int] = {}
         for fname, fbytes in uploaded_files_data:
-            file_bytes_map[fname] = fbytes
+            clean_name = sanitize_filename(fname)
+            if clean_name in seen_names:
+                seen_names[clean_name] += 1
+                p = Path(clean_name)
+                unique_name = f"{p.stem}_{seen_names[clean_name]}{p.suffix}"
+            else:
+                seen_names[clean_name] = 1
+                unique_name = clean_name
+            file_bytes_map[unique_name] = fbytes
 
     # 2. Save each parsed document as a submission row
     for doc in prepared.documents:
@@ -150,7 +171,12 @@ def save_submission_to_db(
             # Save file to uploads/
             safe_name = sanitize_filename(doc.filename)
             unique_filename = f"{eval_id}_{uuid.uuid4().hex[:8]}_{safe_name}"
-            dest_path = UPLOADS_DIR / unique_filename
+            dest_path = (UPLOADS_DIR / unique_filename).resolve()
+            
+            # Security verification: path traversal prevention
+            if not str(dest_path).startswith(str(UPLOADS_DIR.resolve())):
+                raise ValueError(f"Security error: path traversal outside uploads dir detected for '{doc.filename}'.")
+
             try:
                 with open(dest_path, "wb") as f:
                     f.write(file_bytes_map[doc.filename])

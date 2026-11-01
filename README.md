@@ -14,16 +14,16 @@ The workflow begins by accepting submissions across 13 formats. Google Gemini AI
 
 ---
 
-## Current Status: Series 3 of 5 (Human Evaluation, AI Evaluation and Comparison)
+## Current Status: Series 4 of 5 (Reliability, Validation and Security Testing)
 
-This release implements **Series 3**:
-- **Human Evaluation Interface:** Grade approved rubric criteria with 0.5 decimal increments, validated bounds `[0, max_marks]`, and optional qualitative remarks.
-- **Independence Guardrail:** AI scores and suggestions remain strictly hidden from the evaluator until human evaluation is officially submitted.
-- **Independent AI Evaluation:** Optional Gemini scoring using the exact approved rubric criteria (no criteria modification or hallucinations).
-- **Comparison Analytics:** Normalized scores, raw absolute differences, normalized absolute differences, Mean Absolute Error (MAE), and agreement rate within a 10 percentage-point tolerance.
-- **Comparison Dashboard:** Plotly visual bar chart and expandable criterion-level comparison table highlighting areas of significant disagreement.
-- **Human-Only Evaluation Support:** Full evaluation workflow functions without a Gemini key; human results display cleanly without AI comparisons.
-- **Relational Persistence:** Separate SQLite persistence for `human_scores` and `ai_scores` preserving historical evaluations.
+This release implements **Series 4**:
+- **Critical Scoring Validation:** AI scores exceeding criterion maximums, negative scores, or invalid increments are strictly rejected with errors (no silent clamping).
+- **Approved Rubric Integrity:** Rubrics are locked against mutation once scoring begins; existing criteria and scores are permanently preserved.
+- **Evaluation Independence Verified:** The independence guardrail is enforced at both UI and backend query levels (AI scores hidden before human submission; AI cannot overwrite human scores).
+- **Submission Edge Case Resilience:** Handling for 0-byte files, corrupted PDFs/DOCXs, duplicate multi-upload filenames, 5,000/5,001 word boundaries, >10MB limits, and Unicode/long lines.
+- **Gemini API Resilience:** Transient error retries with exponential backoff on 429/503/timeouts; immediate failure on 400/401; zero API key leakage in logs or exceptions.
+- **Database & Security Hardening:** Foreign key enforcement, atomic transaction rollbacks, path traversal prevention, SQL injection immunity, and prompt injection isolation (`<SUBMISSION_CONTENT>`).
+- **Comprehensive Test Suite:** 118 automated unit and integration tests passing in pytest (100% pass rate).
 
 ---
 
