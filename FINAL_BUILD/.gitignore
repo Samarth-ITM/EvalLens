@@ -30,7 +30,6 @@ uploads/*
 .DS_Store
 Thumbs.db
 
-# Docker and temporary archives
-.dockerignore
+# Temporary archives
 FINAL_BUILD.zip
 
