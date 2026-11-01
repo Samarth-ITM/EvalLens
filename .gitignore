@@ -1,7 +1,10 @@
 # Node & Dependencies
 node_modules/
+
+# Build Output & Submission Archives
 dist/
 dist-ssr/
+*.zip
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
