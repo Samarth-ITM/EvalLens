@@ -113,3 +113,4 @@ export default function Header({ activeNav, setActiveNav, onLogout, hasApiKey, e
     </header>
   );
 }
+

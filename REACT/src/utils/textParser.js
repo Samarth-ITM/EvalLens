@@ -87,3 +87,4 @@ export async function readFileContent(file) {
     reader.readAsArrayBuffer(file);
   });
 }
+

@@ -236,3 +236,4 @@ function generateLocalEvaluation({ contentText, criteria }) {
 
   return results;
 }
+

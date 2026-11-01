@@ -90,3 +90,4 @@ export function calculateComparison(criteria = [], humanScores = {}, aiScores = 
     criterionComparisons
   };
 }
+

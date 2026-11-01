@@ -169,3 +169,4 @@ export default function HistoryPage({ evaluations, onSelectEvaluation, onDeleteE
     </div>
   );
 }
+

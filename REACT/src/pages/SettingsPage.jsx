@@ -223,3 +223,4 @@ export default function SettingsPage({ settings, onSaveSettings, onResetDemoData
     </div>
   );
 }
+

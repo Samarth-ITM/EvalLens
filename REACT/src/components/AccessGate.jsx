@@ -91,3 +91,4 @@ export default function AccessGate({ expectedPasskey, onUnlock }) {
     </div>
   );
 }
+
