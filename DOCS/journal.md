@@ -266,3 +266,131 @@ Series 3 (Human and AI Evaluation):
 3. Calculate alignment, variance, and comparison metrics in `core/comparison.py`.
 4. Build the comparison dashboard and score history views.
 5. Connect human and AI score persistence in SQLite `human_scores` and `ai_scores` tables.
+
+
+---
+
+## Entry: 2026-11-01 19:12:00 IST — Series 3 Completion
+
+### Date and Time
+2026-11-01 19:12:00 IST
+
+### Development Series
+Series 3 of 5: Human Evaluation, AI Evaluation and Comparison
+
+### Objective
+Implement the complete evaluation workflow: human scoring with validated 0.5 increments, independent AI evaluation on exact approved rubrics, strict independence enforcement (hiding AI scores until human submission), comparison analytics (normalized scores, MAE, agreement percentage within 10 percentage points), Plotly comparison dashboard, and relational persistence.
+
+### Work Completed
+1. Extended SQLite schema and database manager (`database/schema.sql`, `database/db.py`):
+   - Added `evidence_location` and `uncertainty` columns to `ai_scores`.
+   - Added automatic migration check ensuring existing databases upgrade smoothly without data loss.
+   - Implemented persistence methods `save_human_scores`, `get_human_scores`, `save_ai_scores`, `get_ai_scores`, `has_human_scores`, and `has_ai_scores`.
+   - Enhanced `get_evaluations_summary` with human and AI total score metrics.
+2. Implemented `core/validators.py`:
+   - Added validation models `HumanCriterionScoreInput`, `AICriterionScoreResult`, and `AIEvaluationResponse`.
+3. Implemented `core/comparison.py`:
+   - Formulated normalized score computation: `(score / max_marks) * 100`.
+   - Formulated normalized absolute difference: `|human_normalized - ai_normalized|`.
+   - Formulated MAE: mean of normalized absolute differences across evaluated criteria.
+   - Formulated agreement percentage: percentage of criteria with normalized difference <= 10 percentage points.
+   - Guarded missing AI score handling so absent AI scores are never treated as zero.
+   - Handled human-only evaluations returning clean summaries without comparison metrics.
+4. Implemented `core/evaluator.py`:
+   - Validated human score boundaries (`0.0 <= score <= max_marks`) with 0.5 step support.
+   - Built prompt for Gemini AI scoring strictly constrained to the approved rubric criteria.
+   - Validated AI scores ensuring no score exceeds criterion maximums (clamping if exceeded).
+   - Enforced the Independence Rule via `get_visible_ai_scores_for_review`: AI scores remain hidden until human scoring is submitted.
+   - Guaranteed AI scoring never modifies or overwrites human scores.
+5. Built Streamlit Views:
+   - `ui/pages/evaluate.py`: Multi-section evaluation and dashboard workspace (Submission Overview, Human Scoring Form, Optional AI Scoring, Plotly Comparison Bar Chart, and Detailed Criterion Drill-down Table).
+   - `app.py`: Added `Evaluate` tab to navigation and updated version tag to v0.3.0.
+   - `ui/pages/new_evaluation.py`: Added direct "Score Evaluation ➔" action on rubric approval.
+   - `ui/pages/history.py`: Added score metrics and direct "Evaluate / Compare ➔" quick actions.
+   - `ui/pages/home.py`: Added score tags and quick navigation to Evaluate view.
+6. Authored Automated Tests in `TEST/`:
+   - `TEST/unit/test_comparison.py` (5 tests)
+   - `TEST/unit/test_evaluator.py` (6 tests)
+   - `TEST/integration/test_evaluation_flow.py` (2 tests)
+   - Updated `TEST/integration/test_imports.py` to verify `ui.pages.evaluate`.
+   - Verified that all 67 tests pass cleanly.
+7. Verified live application launch on port 8503 returning HTTP 200 OK.
+8. Updated `README.md` and `DOCS/report.md`.
+
+### Files Created
+- `core/comparison.py`
+- `ui/pages/evaluate.py`
+- `TEST/unit/test_comparison.py`
+- `TEST/unit/test_evaluator.py`
+- `TEST/integration/test_evaluation_flow.py`
+
+### Files Modified
+- `core/evaluator.py`
+- `core/validators.py`
+- `database/schema.sql`
+- `database/db.py`
+- `app.py`
+- `ui/pages/new_evaluation.py`
+- `ui/pages/history.py`
+- `ui/pages/home.py`
+- `TEST/integration/test_imports.py`
+- `README.md`
+- `DOCS/report.md`
+- `DOCS/journal.md`
+
+### Technical Decisions Explicitly Specified by Product Owner
+1. Score input uses 0.5 increments by default and must be between 0 and criterion maximum marks.
+2. AI evaluation is strictly optional and uses the existing Gemini BYOK client.
+3. AI must evaluate using the exact human-approved rubric and cannot create new criteria or alter the rubric.
+4. AI must not invent evidence; report limitations clearly.
+5. Critical Independence Rule: Human must submit evaluation before AI scores become visible. AI results remain hidden until human submission is complete.
+6. AI must never overwrite human scores.
+7. Comparison formulas:
+   - Normalized score = `(score / maximum marks) * 100`
+   - Normalized absolute difference = `|human_normalized - ai_normalized|`
+   - MAE = average of normalized absolute differences across evaluated criteria
+   - Agreement percentage = percentage of criteria whose normalized difference is <= 10 percentage points
+8. Handle missing AI scores correctly without treating them as zero.
+9. Do not describe human scores as ground truth or claim MAE measures AI accuracy.
+10. Dashboard labels: "Human score", "AI suggestion", "Difference". Never present AI score as final result.
+11. Support human-only evaluation without requiring a Gemini key.
+
+### Commands Executed
+1. `pytest -v` — Ran full test suite (67 tests collected, initially 1 failure due to foreign key test setup in isolated test db, resolved).
+2. `pytest -v` — Executed full test suite after resolution (67 passed in 0.73s).
+3. `streamlit run app.py --server.headless true --server.port 8503` — Tested application launch.
+4. `curl -I http://localhost:8503/` — Confirmed HTTP 200 OK.
+
+### Tests Performed
+1. Human score boundary checks (`[0, max]`, negatives rejected, decimals accepted).
+2. AI prompt generation ensuring exact approved criteria are specified.
+3. AI score parsing and validation against criterion maximums.
+4. AI score clamping when model returns scores exceeding rubric limits.
+5. Malformed AI response rejection.
+6. Independence Rule enforcement (AI scores hidden before human submission, unhidden after).
+7. Normalized score calculation.
+8. MAE calculation across multiple criteria.
+9. Agreement percentage calculation within 10 percentage points tolerance.
+10. Missing AI score handling (excluded from MAE, never treated as 0).
+11. Human-only evaluation handling without comparison.
+12. Full evaluation lifecycle integration test (rubric approval -> human scoring -> AI scoring -> comparison).
+13. Human-only workflow integration test with database persistence.
+14. Regression tests for Series 1 and Series 2.
+
+### Actual Test Results
+- Pytest suite: 67 tests collected, 67 passed, 0 failed in 0.73s.
+- Streamlit application: Started successfully on port 8503, returned HTTP 200 OK.
+
+### Errors Encountered
+- **Error:** In `test_independence_rule_ai_scores_hidden_before_human_submission`, `eval_id=99` was used without inserting parent evaluation or criterion rows first, causing SQLite `FOREIGN KEY constraint failed`.
+  - **Resolution:** Updated test to create the evaluation and criterion records in the test database prior to testing score insertion and visibility checks.
+
+### Known Issues
+None. All Series 3 features are implemented and verified.
+
+### Next Development Tasks
+Series 4 (Testing and Reliability):
+1. Unit and integration tests for edge cases and input validation.
+2. API failure, rate limiting, and timeout resilience handling.
+3. Stress testing with large documents near the 5,000-word limit.
+4. Security and reliability auditing.

@@ -8,23 +8,22 @@
 
 ## Overview
 
-EvalLens helps teams and evaluators evaluate submitted work consistently. 
+EvalLens helps teams and evaluators evaluate submitted work consistently, rigorously, and transparently.
 
-The user submits work. AI analyzes it and proposes relevant evaluation criteria. The human reviews the criteria, approves or edits them, and evaluates the work. AI can independently score the same criteria, allowing the application to compare both results for alignment and variance analysis.
+The workflow begins by accepting submissions across 13 formats. Google Gemini AI analyzes the work to propose structured, evidence-grounded criteria. The human evaluator reviews and explicitly approves the rubric. Human evaluation is conducted independently, followed by optional AI evaluation on the exact approved rubric. The application compares both evaluations to highlight alignment and variance without ever treating AI scores as ground truth.
 
 ---
 
-## Current Status: Series 2 of 5 (Submission and AI Criteria Generation)
+## Current Status: Series 3 of 5 (Human Evaluation, AI Evaluation and Comparison)
 
-This release implements **Series 2**:
-- Document and text parsing for 13 supported file types (`.txt`, `.md`, `.pdf`, `.docx`, `.py`, `.cpp`, `.h`, `.hpp`, `.java`, `.js`, `.ts`, `.json`, `.html`, `.css`, `.sql`).
-- Strict 5,000 combined word limit enforcement and 10 MB per-file limits.
-- Separation of contextual reference materials from graded submission content.
-- AI criteria generation with Google Gemini using 3 prompt versions (V1 basic, V2 with instructions, V3 evidence-grounded default).
-- Evidence grounding: verbatim quotations and line/page references extracted directly from the submission.
-- Complete human review interface: edit names, descriptions, max marks, evidence guidance; add, remove, and reorder criteria.
-- Explicit rubric approval workflow with SQLite persistence, distinguishing AI proposals from human-approved rubrics.
-- Full human-only fallback mode without requiring a Gemini key.
+This release implements **Series 3**:
+- **Human Evaluation Interface:** Grade approved rubric criteria with 0.5 decimal increments, validated bounds `[0, max_marks]`, and optional qualitative remarks.
+- **Independence Guardrail:** AI scores and suggestions remain strictly hidden from the evaluator until human evaluation is officially submitted.
+- **Independent AI Evaluation:** Optional Gemini scoring using the exact approved rubric criteria (no criteria modification or hallucinations).
+- **Comparison Analytics:** Normalized scores, raw absolute differences, normalized absolute differences, Mean Absolute Error (MAE), and agreement rate within a 10 percentage-point tolerance.
+- **Comparison Dashboard:** Plotly visual bar chart and expandable criterion-level comparison table highlighting areas of significant disagreement.
+- **Human-Only Evaluation Support:** Full evaluation workflow functions without a Gemini key; human results display cleanly without AI comparisons.
+- **Relational Persistence:** Separate SQLite persistence for `human_scores` and `ai_scores` preserving historical evaluations.
 
 ---
 
@@ -32,11 +31,11 @@ This release implements **Series 2**:
 
 - **Language:** Python (3.11+ or 3.12 recommended)
 - **UI Framework:** Streamlit
+- **Visualizations:** Plotly
 - **AI Integration:** Google Gemini via the official Google GenAI Python SDK (`google-genai`)
 - **Document Extraction:** `pypdf` (PDF extraction) and `python-docx` (DOCX extraction)
-- **Database:** SQLite (`sqlite3` standard library) with foreign key constraints enabled
+- **Database:** SQLite (`sqlite3` standard library) with foreign keys and migrations
 - **Data Validation:** Pydantic v2
-- **Visualization:** Plotly
 - **Testing:** pytest
 - **Configuration:** Environment variables (`python-dotenv`) & local settings
 
@@ -50,41 +49,38 @@ This release implements **Series 2**:
 | Documents | `.pdf`, `.docx` | PDF page markers preserved; DOCX paragraphs & tables extracted |
 | Source Code | `.py`, `.cpp`, `.h`, `.hpp`, `.java`, `.js`, `.ts`, `.json`, `.html`, `.css`, `.sql` | Inspected strictly as text; line numbers tracked |
 
-- **Word Limit:** Maximum 5,000 words total per evaluation (combined across pasted text and all uploaded files). Submissions exceeding 5,000 words are rejected with the detected count.
+- **Word Limit:** Maximum 5,000 words total per evaluation (combined across pasted text and all uploaded files).
 - **File Size Limit:** 10 MB per file.
-- **Unsupported Formats:** ZIP, PPTX, image formats, and OCR are not supported in this prototype. Scanned image-only PDFs produce an informative warning.
+- **Unsupported Formats:** ZIP, PPTX, image formats, and OCR are not supported in this prototype.
 
 ---
 
-## Workflow Guide: Creating an Evaluation & Approving a Rubric
+## Evaluation and Comparison Workflow
 
-### 1. Configure Gemini Key (Optional for Human-Only Mode)
-- Open **Settings → AI Configuration**.
-- Enter your Google Gemini API key and click **Save Key**.
-- Click **Test Connection** to verify live connectivity with Gemini.
-- *Note: You can skip this step if you wish to build custom rubrics manually.*
-
-### 2. Create a New Evaluation
+### 1. Create Evaluation & Approve Rubric
 - Navigate to **New Evaluation**.
-- Enter an **Evaluation Title** (e.g. `CS101 Final Project Review`).
-- Select a **Submission Type** (`Written Work`, `Code`, `Software Project`, `Technical Report`, `Custom`).
-- (Optional) Enter **Evaluation Instructions** and **Reference Material** (e.g. assignment guidelines; kept separate from the submission).
-- Paste submission text, upload one or multiple supported files, or combine both.
-- Select your AI Prompt Strategy (default: `V3`).
+- Enter a title, choose submission type, and add optional instructions/reference materials.
+- Paste text, upload files, or combine both.
+- Generate criteria using Gemini (with V3 prompt strategy by default) or build custom criteria manually.
+- Review, edit, reorder, and click **Approve Rubric**.
 
-### 3. Generate or Create Criteria
-- Click **Analyze with Gemini AI** to generate 3–8 evidence-grounded criteria with verbatim excerpts and location references.
-- Alternatively, click **Create Rubric Manually** to build your criteria from scratch without an AI key.
+### 2. Enter Human Scores
+- Open the evaluation in the **Evaluate** tab (or via **Evaluation History**).
+- For each approved criterion, review description, evidence guidance, and grounded excerpts.
+- Enter a score between 0 and the criterion's maximum marks (in 0.5 increments).
+- Enter optional qualitative feedback for each criterion.
+- Click **Submit Human Evaluation** (or **Save Progress** to draft).
+- *Note: AI scores remain hidden until human submission is confirmed.*
 
-### 4. Review and Edit Rubric
-- Edit criterion names, descriptions, and scoring guidance.
-- Adjust maximum marks per criterion (total marks are automatically recalculated).
-- Use **⬆️ Up** and **⬇️ Down** buttons to reorder criteria.
-- Add additional custom criteria with **➕ Add Criterion** or remove criteria with **🗑️ Delete**.
+### 3. Optional AI Evaluation
+- Once human scores are submitted, click **Run AI Evaluation with Gemini**.
+- Gemini independently evaluates the submission against the exact approved rubric criteria and returns suggested scores, justifications, and evidence excerpts.
 
-### 5. Approve Rubric
-- Click **Approve Rubric**. The evaluation session, submission files, and approved criteria are safely stored in the local SQLite database.
-- Review your approved evaluations under **Evaluation History**.
+### 4. Review Comparison Dashboard
+- Compare overall metrics: Human Total, AI Suggestion, Score Difference, MAE, and Agreement Rate.
+- Inspect the interactive Plotly bar chart comparing human scores vs AI suggestions per criterion.
+- Drill down into individual criteria in the comparison table to inspect human feedback alongside AI reasoning, cited evidence, and uncertainty notes.
+- Criteria with normalized differences exceeding 10 percentage points are flagged as significant disagreement.
 
 ---
 
@@ -94,7 +90,7 @@ This release implements **Series 2**:
 - Python 3.11 or Python 3.12 (Python 3.12 recommended)
 - Git
 
-### 2. Clone and Setup Environment
+### 2. Setup Environment
 
 ```bash
 # Clone and enter repo
@@ -116,7 +112,7 @@ pip install -r requirements.txt
 ```bash
 streamlit run app.py
 ```
-Visit `http://localhost:8501` in your browser.
+Open `http://localhost:8501` in your browser.
 
 ---
 
@@ -134,8 +130,8 @@ pytest TEST/ -v
 
 EvalLens is designed with privacy and security as primary principles:
 1. **Never Hardcoded:** No API keys are embedded in source code.
-2. **Session Memory Only:** Keys entered in the Settings UI remain exclusively in server memory during the active session.
-3. **No Database Persistence:** Keys are never written to the SQLite database or saved to disk files.
+2. **Session Memory Only:** Keys entered in Settings remain exclusively in server memory during the active session.
+3. **No Database Persistence:** Keys are never written to SQLite or saved to disk files.
 4. **Masked Display:** The UI masks active keys (e.g. `AIza••••••••1234`).
 5. **No Key Leakage:** Error messages strip and sanitize API keys to prevent accidental leaks in UI or logs.
-6. **Human-Only Mode:** If no key is provided, the application remains fully functional for manual rubric creation.
+6. **Human-Only Mode:** If no key is provided, the application remains fully functional for human-only evaluation.

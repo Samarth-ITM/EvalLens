@@ -1,8 +1,8 @@
 """
 Evaluation History page view for EvalLens.
 
-Displays previous evaluation sessions, submission details, and approved rubrics
-stored in the local SQLite database.
+Displays previous evaluation sessions, submission details, approved rubrics,
+and scoring comparison metrics stored in the local SQLite database.
 """
 
 from __future__ import annotations
@@ -34,7 +34,16 @@ def render_history_page() -> None:
     st.write(f"Total evaluations recorded: **{len(evaluations)}**")
 
     for ev in evaluations:
-        status_label = "✅ Rubric Approved" if ev["status"] == "rubric_approved" else f"Status: `{ev['status']}`"
+        status = ev["status"]
+        if status == "completed":
+            status_label = "✅ Evaluated & Compared"
+        elif status == "human_evaluated":
+            status_label = "👤 Human Evaluated"
+        elif status == "rubric_approved":
+            status_label = "📋 Rubric Approved"
+        else:
+            status_label = f"Status: `{status}`"
+
         expander_title = (
             f"Evaluation #{ev['id']}: {ev['title']} — {ev['submission_type']} ({status_label})"
         )
@@ -44,18 +53,30 @@ def render_history_page() -> None:
             if ev["description"]:
                 st.caption(ev["description"])
 
-            m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+            m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns(5)
             with m_col1:
                 st.metric("Submission Type", ev["submission_type"])
             with m_col2:
                 st.metric("Total Words", f"{ev['total_words']:,}")
             with m_col3:
-                st.metric("Status", ev["status"])
-            with m_col4:
                 tot_marks = ev["approved_total_marks"]
-                st.metric("Approved Marks", f"{tot_marks:.1f}" if tot_marks is not None else "N/A")
+                st.metric("Max Marks", f"{tot_marks:.1f}" if tot_marks is not None else "N/A")
+            with m_col4:
+                h_score = ev["human_total_score"]
+                st.metric("Human Score", f"{h_score:.1f}" if h_score is not None else "Not scored")
+            with m_col5:
+                ai_score = ev["ai_total_score"]
+                st.metric("AI Suggestion", f"{ai_score:.1f}" if ai_score is not None else "Not run")
 
             st.caption(f"Created: {ev['created_at']} | Strategy: {ev['prompt_version']}")
+
+            # Quick Action Button to open in Evaluate
+            if ev["approved_total_marks"] is not None:
+                btn_label = "View Evaluation & Comparison ➔" if h_score is not None else "Score Evaluation ➔"
+                if st.button(btn_label, key=f"eval_btn_{ev['id']}"):
+                    st.session_state["selected_eval_id"] = ev["id"]
+                    st.session_state["active_nav"] = "Evaluate"
+                    st.rerun()
 
             # Display Submissions
             submissions = get_submissions_for_evaluation(ev["id"])

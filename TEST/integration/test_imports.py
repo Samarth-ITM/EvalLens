@@ -25,6 +25,7 @@ import pytest
         "ui.components.header",
         "ui.pages.home",
         "ui.pages.new_evaluation",
+        "ui.pages.evaluate",
         "ui.pages.history",
         "ui.pages.settings_page",
         "app",

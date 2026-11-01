@@ -12,6 +12,7 @@ import streamlit as st
 from config.settings import BASE_DIR, settings
 from database.db import init_db
 from ui.components.header import render_header
+from ui.pages.evaluate import render_evaluate_page
 from ui.pages.history import render_history_page
 from ui.pages.home import render_home_page
 from ui.pages.new_evaluation import render_new_evaluation_page
@@ -46,7 +47,7 @@ def main() -> None:
     apply_custom_styles()
 
     # Navigation setup
-    nav_options = ["Home", "New Evaluation", "Evaluation History", "Settings"]
+    nav_options = ["Home", "New Evaluation", "Evaluate", "Evaluation History", "Settings"]
 
     if "active_nav" not in st.session_state:
         st.session_state["active_nav"] = "Home"
@@ -67,9 +68,9 @@ def main() -> None:
 
     st.sidebar.markdown("---")
     st.sidebar.caption(
-        f"**EvalLens v0.1.0**\n\n"
-        "Series 1: Foundation\n\n"
-        "AI-assisted, human-controlled evaluation."
+        f"**EvalLens v0.3.0**\n\n"
+        "Series 3: Evaluation & Comparison\n\n"
+        "AI assists evaluation; human controls the final result."
     )
 
     # Render persistent header
@@ -80,6 +81,8 @@ def main() -> None:
         render_home_page()
     elif selected_nav == "New Evaluation":
         render_new_evaluation_page()
+    elif selected_nav == "Evaluate":
+        render_evaluate_page()
     elif selected_nav == "Evaluation History":
         render_history_page()
     elif selected_nav == "Settings":
@@ -88,4 +91,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

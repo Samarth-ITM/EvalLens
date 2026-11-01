@@ -1,4 +1,4 @@
--- EvalLens Database Schema (Series 1 & 2)
+-- EvalLens Database Schema (Series 1, 2 & 3)
 -- Manages evaluations, submissions, AI proposals, approved rubrics, criteria, and human/AI scores.
 -- No API keys or credentials are ever stored in this database.
 
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS evaluations (
     submission_type TEXT NOT NULL DEFAULT 'Custom', -- 'Written Work', 'Code', 'Software Project', 'Technical Report', 'Custom'
     instructions TEXT,
     reference_material TEXT,
-    status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'rubric_proposed', 'rubric_approved', 'completed'
+    status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'rubric_proposed', 'rubric_approved', 'human_evaluated', 'completed'
     prompt_version TEXT DEFAULT 'V3',
     total_words INTEGER DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS rubric_criteria (
     FOREIGN KEY (rubric_id) REFERENCES rubrics(id) ON DELETE CASCADE
 );
 
--- Human Evaluation Scores (Kept strictly separate from AI scores, reserved for Series 3)
+-- Human Evaluation Scores (Kept strictly separate from AI scores)
 CREATE TABLE IF NOT EXISTS human_scores (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evaluation_id INTEGER NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS human_scores (
     UNIQUE(evaluation_id, criterion_id)
 );
 
--- AI Evaluation Scores (Kept strictly separate from Human scores, reserved for Series 3)
+-- AI Evaluation Scores (Kept strictly separate from Human scores)
 CREATE TABLE IF NOT EXISTS ai_scores (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     evaluation_id INTEGER NOT NULL,
@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS ai_scores (
     score REAL NOT NULL,
     reasoning TEXT,
     evidence_text TEXT,
+    evidence_location TEXT,
+    uncertainty TEXT,
     model_name TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

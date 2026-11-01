@@ -2,7 +2,7 @@
 Database access and initialization for EvalLens.
 
 Provides safe SQLite connection handling, parameterized queries, schema setup,
-and migration logic for Series 1 & 2.
+migrations, and persistence for evaluations, rubrics, human scores, and AI scores.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ def _migrate_columns_if_missing(conn: sqlite3.Connection) -> None:
     """
     cursor = conn.cursor()
 
-    # Columns to ensure in 'evaluations'
+    # Columns in 'evaluations'
     eval_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(evaluations);").fetchall()}
     if "submission_type" not in eval_cols and "evaluations" in eval_cols:
         cursor.execute("ALTER TABLE evaluations ADD COLUMN submission_type TEXT NOT NULL DEFAULT 'Custom';")
@@ -48,14 +48,14 @@ def _migrate_columns_if_missing(conn: sqlite3.Connection) -> None:
     if "total_words" not in eval_cols and "evaluations" in eval_cols:
         cursor.execute("ALTER TABLE evaluations ADD COLUMN total_words INTEGER DEFAULT 0;")
 
-    # Columns to ensure in 'submissions'
+    # Columns in 'submissions'
     sub_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(submissions);").fetchall()}
     if "word_count" not in sub_cols and "submissions" in sub_cols:
         cursor.execute("ALTER TABLE submissions ADD COLUMN word_count INTEGER DEFAULT 0;")
     if "warnings" not in sub_cols and "submissions" in sub_cols:
         cursor.execute("ALTER TABLE submissions ADD COLUMN warnings TEXT;")
 
-    # Columns to ensure in 'rubrics'
+    # Columns in 'rubrics'
     rubric_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(rubrics);").fetchall()}
     if "total_marks" not in rubric_cols and "rubrics" in rubric_cols:
         cursor.execute("ALTER TABLE rubrics ADD COLUMN total_marks REAL NOT NULL DEFAULT 0.0;")
@@ -66,7 +66,7 @@ def _migrate_columns_if_missing(conn: sqlite3.Connection) -> None:
     if "prompt_version" not in rubric_cols and "rubrics" in rubric_cols:
         cursor.execute("ALTER TABLE rubrics ADD COLUMN prompt_version TEXT DEFAULT 'V3';")
 
-    # Columns to ensure in 'rubric_criteria'
+    # Columns in 'rubric_criteria'
     crit_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(rubric_criteria);").fetchall()}
     if "why_it_matters" not in crit_cols and "rubric_criteria" in crit_cols:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN why_it_matters TEXT;")
@@ -80,6 +80,13 @@ def _migrate_columns_if_missing(conn: sqlite3.Connection) -> None:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN scoring_guidance TEXT;")
     if "is_ai_generated" not in crit_cols and "rubric_criteria" in crit_cols:
         cursor.execute("ALTER TABLE rubric_criteria ADD COLUMN is_ai_generated INTEGER NOT NULL DEFAULT 1;")
+
+    # Columns in 'ai_scores'
+    ai_score_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(ai_scores);").fetchall()}
+    if "evidence_location" not in ai_score_cols and "ai_scores" in ai_score_cols:
+        cursor.execute("ALTER TABLE ai_scores ADD COLUMN evidence_location TEXT;")
+    if "uncertainty" not in ai_score_cols and "ai_scores" in ai_score_cols:
+        cursor.execute("ALTER TABLE ai_scores ADD COLUMN uncertainty TEXT;")
 
     conn.commit()
 
@@ -192,6 +199,14 @@ def create_evaluation(
     )
 
 
+def update_evaluation_status(
+    evaluation_id: int, status: str, db_path: Optional[Path] = None
+) -> None:
+    """Update status of an evaluation session."""
+    query = "UPDATE evaluations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?;"
+    execute_query(query, (status, evaluation_id), db_path=db_path)
+
+
 def get_evaluation(evaluation_id: int, db_path: Optional[Path] = None) -> Optional[sqlite3.Row]:
     """Fetch an evaluation by ID."""
     query = "SELECT * FROM evaluations WHERE id = ?;"
@@ -253,7 +268,6 @@ def save_ai_criteria_proposals(
     """Store raw AI criteria proposals for an evaluation session."""
     with get_connection(db_path) as conn:
         cursor = conn.cursor()
-        # Delete any previous proposal for this evaluation if re-generating
         cursor.execute("DELETE FROM ai_criteria_proposals WHERE evaluation_id = ?;", (evaluation_id,))
         for idx, crit in enumerate(criteria):
             cursor.execute(
@@ -386,8 +400,162 @@ def get_rubric_with_criteria(
     }
 
 
+# ---------------------------------------------------------
+# Human & AI Scoring Persistence (Series 3)
+# ---------------------------------------------------------
+
+def save_human_scores(
+    evaluation_id: int,
+    scores_data: List[Dict[str, Any]],
+    evaluator_name: str = "Human Evaluator",
+    db_path: Optional[Path] = None,
+) -> None:
+    """
+    Save human evaluation scores inside a single transaction.
+    Replaces or inserts scores per criterion without touching AI scores.
+    """
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        for item in scores_data:
+            cursor.execute(
+                """
+                INSERT INTO human_scores (
+                    evaluation_id, criterion_id, score, feedback, evaluator_name, updated_at
+                ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(evaluation_id, criterion_id) DO UPDATE SET
+                    score = excluded.score,
+                    feedback = excluded.feedback,
+                    evaluator_name = excluded.evaluator_name,
+                    updated_at = CURRENT_TIMESTAMP;
+                """,
+                (
+                    evaluation_id,
+                    item["criterion_id"],
+                    float(item["score"]),
+                    item.get("feedback", ""),
+                    evaluator_name,
+                ),
+            )
+
+        cursor.execute(
+            """
+            UPDATE evaluations 
+            SET status = CASE 
+                WHEN status = 'completed' THEN 'completed' 
+                ELSE 'human_evaluated' 
+            END,
+            updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?;
+            """,
+            (evaluation_id,),
+        )
+        conn.commit()
+
+
+def get_human_scores(
+    evaluation_id: int, db_path: Optional[Path] = None
+) -> List[sqlite3.Row]:
+    """Retrieve all human scores for an evaluation."""
+    query = """
+        SELECT hs.*, rc.name as criterion_name, rc.max_score, rc.order_index
+        FROM human_scores hs
+        JOIN rubric_criteria rc ON hs.criterion_id = rc.id
+        WHERE hs.evaluation_id = ?
+        ORDER BY rc.order_index ASC;
+    """
+    return fetch_all(query, (evaluation_id,), db_path=db_path)
+
+
+def has_human_scores(evaluation_id: int, db_path: Optional[Path] = None) -> bool:
+    """Check whether a human evaluation has been submitted for this session."""
+    query = "SELECT COUNT(*) as count FROM human_scores WHERE evaluation_id = ?;"
+    row = fetch_one(query, (evaluation_id,), db_path=db_path)
+    return bool(row and row["count"] > 0)
+
+
+def save_ai_scores(
+    evaluation_id: int,
+    ai_scores_data: List[Dict[str, Any]],
+    model_name: str,
+    db_path: Optional[Path] = None,
+) -> None:
+    """
+    Save AI evaluation scores inside a single transaction.
+    Does NOT touch or overwrite human scores.
+    """
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        for item in ai_scores_data:
+            cursor.execute(
+                """
+                INSERT INTO ai_scores (
+                    evaluation_id, criterion_id, score, reasoning, evidence_text,
+                    evidence_location, uncertainty, model_name, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(evaluation_id, criterion_id, model_name) DO UPDATE SET
+                    score = excluded.score,
+                    reasoning = excluded.reasoning,
+                    evidence_text = excluded.evidence_text,
+                    evidence_location = excluded.evidence_location,
+                    uncertainty = excluded.uncertainty,
+                    updated_at = CURRENT_TIMESTAMP;
+                """,
+                (
+                    evaluation_id,
+                    item["criterion_id"],
+                    float(item["score"]),
+                    item.get("reasoning", ""),
+                    item.get("evidence_text", item.get("evidence_excerpt", "")),
+                    item.get("evidence_location", ""),
+                    item.get("uncertainty", ""),
+                    model_name,
+                ),
+            )
+
+        cursor.execute(
+            """
+            UPDATE evaluations 
+            SET status = 'completed', updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?;
+            """,
+            (evaluation_id,),
+        )
+        conn.commit()
+
+
+def get_ai_scores(
+    evaluation_id: int, model_name: Optional[str] = None, db_path: Optional[Path] = None
+) -> List[sqlite3.Row]:
+    """Retrieve all AI scores for an evaluation."""
+    if model_name:
+        query = """
+            SELECT ais.*, rc.name as criterion_name, rc.max_score, rc.order_index
+            FROM ai_scores ais
+            JOIN rubric_criteria rc ON ais.criterion_id = rc.id
+            WHERE ais.evaluation_id = ? AND ais.model_name = ?
+            ORDER BY rc.order_index ASC;
+        """
+        return fetch_all(query, (evaluation_id, model_name), db_path=db_path)
+    else:
+        query = """
+            SELECT ais.*, rc.name as criterion_name, rc.max_score, rc.order_index
+            FROM ai_scores ais
+            JOIN rubric_criteria rc ON ais.criterion_id = rc.id
+            WHERE ais.evaluation_id = ?
+            ORDER BY rc.order_index ASC, ais.id DESC;
+        """
+        return fetch_all(query, (evaluation_id,), db_path=db_path)
+
+
+def has_ai_scores(evaluation_id: int, db_path: Optional[Path] = None) -> bool:
+    """Check whether AI scores exist for this evaluation."""
+    query = "SELECT COUNT(*) as count FROM ai_scores WHERE evaluation_id = ?;"
+    row = fetch_one(query, (evaluation_id,), db_path=db_path)
+    return bool(row and row["count"] > 0)
+
+
 def get_evaluations_summary(db_path: Optional[Path] = None) -> List[sqlite3.Row]:
-    """Retrieve summary of all evaluations in descending creation order."""
+    """Retrieve summary of all evaluations in descending creation order with scores."""
     query = """
         SELECT 
             e.id,
@@ -400,7 +568,9 @@ def get_evaluations_summary(db_path: Optional[Path] = None) -> List[sqlite3.Row]
             e.created_at,
             e.updated_at,
             (SELECT COUNT(*) FROM submissions s WHERE s.evaluation_id = e.id) as submission_count,
-            (SELECT total_marks FROM rubrics r WHERE r.evaluation_id = e.id AND r.is_approved = 1 LIMIT 1) as approved_total_marks
+            (SELECT total_marks FROM rubrics r WHERE r.evaluation_id = e.id AND r.is_approved = 1 LIMIT 1) as approved_total_marks,
+            (SELECT SUM(score) FROM human_scores hs WHERE hs.evaluation_id = e.id) as human_total_score,
+            (SELECT SUM(score) FROM ai_scores ais WHERE ais.evaluation_id = e.id) as ai_total_score
         FROM evaluations e
         ORDER BY e.created_at DESC;
     """

@@ -43,7 +43,22 @@ def render_home_page() -> None:
                 )
                 if ev["description"]:
                     st.write(ev["description"])
+
+                score_info = []
+                if ev["human_total_score"] is not None:
+                    score_info.append(f"Human: {ev['human_total_score']:.1f}")
+                if ev["ai_total_score"] is not None:
+                    score_info.append(f"AI: {ev['ai_total_score']:.1f}")
+
+                score_str = f" | Scores: {', '.join(score_info)}" if score_info else ""
                 st.caption(
-                    f"Words: {ev['total_words']:,} | Created: {ev['created_at']}"
+                    f"Words: {ev['total_words']:,}{score_str} | Created: {ev['created_at']}"
                 )
+
+                if ev["approved_total_marks"] is not None:
+                    if st.button("Evaluate / Compare ➔", key=f"home_eval_{ev['id']}"):
+                        st.session_state["selected_eval_id"] = ev["id"]
+                        st.session_state["active_nav"] = "Evaluate"
+                        st.rerun()
+
                 st.markdown("---")

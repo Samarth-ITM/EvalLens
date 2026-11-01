@@ -460,13 +460,19 @@ def render_approved_step() -> None:
             f"- **Strategy:** {rubric.prompt_version}"
         )
 
-    col1, col2 = st.columns([1, 1])
+    col1, col2, col3 = st.columns([1, 1, 1])
     with col1:
-        if st.button("Start Another Evaluation", type="primary", use_container_width=True):
+        if st.button("Score Evaluation ➔", type="primary", use_container_width=True):
+            st.session_state["selected_eval_id"] = eval_id
             reset_workflow()
+            st.session_state["active_nav"] = "Evaluate"
             st.rerun()
     with col2:
-        if st.button("View in Evaluation History", use_container_width=True):
+        if st.button("Start Another Evaluation", use_container_width=True):
+            reset_workflow()
+            st.rerun()
+    with col3:
+        if st.button("View in History", use_container_width=True):
             reset_workflow()
             st.session_state["active_nav"] = "Evaluation History"
             st.rerun()

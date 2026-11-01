@@ -1,7 +1,8 @@
 """
 Data validation models using Pydantic.
 
-Validates application entities, evaluation schemas, criteria proposals, and API key configurations.
+Validates application entities, evaluation schemas, criteria proposals,
+human evaluation inputs, and AI scoring outputs.
 """
 
 from __future__ import annotations
@@ -47,7 +48,10 @@ class EvaluationCreate(BaseModel):
     instructions: Optional[str] = Field(None, max_length=10000, description="Optional evaluation instructions")
     reference_material: Optional[str] = Field(None, max_length=20000, description="Optional reference material")
     prompt_version: str = Field(default="V3", pattern="^(V1|V2|V3)$")
-    status: str = Field(default="draft", pattern="^(draft|rubric_proposed|rubric_approved|completed)$")
+    status: str = Field(
+        default="draft",
+        pattern="^(draft|rubric_proposed|rubric_approved|human_evaluated|completed)$",
+    )
 
     @field_validator("submission_type")
     @classmethod
@@ -118,6 +122,35 @@ class RubricCriterionCreate(BaseModel):
     scoring_guidance: Optional[str] = Field(default="", max_length=2000)
     is_ai_generated: bool = Field(default=True)
     order_index: int = Field(default=0, ge=0)
+
+
+class HumanCriterionScoreInput(BaseModel):
+    """Validation for a single human-entered score on a criterion."""
+
+    criterion_id: int = Field(..., ge=1)
+    score: float = Field(..., ge=0.0)
+    feedback: Optional[str] = Field(default="", max_length=5000)
+
+
+class AICriterionScoreResult(BaseModel):
+    """Validation for an individual AI-generated score on an approved criterion."""
+
+    criterion_id: int = Field(..., ge=1)
+    criterion_name: str = Field(...)
+    score: float = Field(..., ge=0.0)
+    max_marks: float = Field(..., gt=0.0)
+    reasoning: str = Field(..., min_length=1)
+    evidence_text: Optional[str] = Field(default="")
+    evidence_location: Optional[str] = Field(default="")
+    uncertainty: Optional[str] = Field(default="")
+
+
+class AIEvaluationResponse(BaseModel):
+    """Schema for structured AI evaluation response across all criteria."""
+
+    scores: List[AICriterionScoreResult] = Field(..., min_length=1)
+    overall_reasoning: Optional[str] = Field(default="")
+    model_name: str = Field(default="gemini-3.8-flash")
 
 
 class ScoreInput(BaseModel):
