@@ -45,7 +45,7 @@ def test_render_live_deployment_complete_workflow() -> None:
         page.wait_for_timeout(2000)
 
         # Handle Streamlit loading if initial wake-up takes a moment
-        page.wait_for_selector('input[type="password"]', timeout=30000)
+        page.wait_for_selector('input[type="password"]', timeout=60000)
         page.screenshot(path=str(SCREENSHOTS_DIR / "01_access_gate.png"))
 
         pwd_input = page.locator('input[type="password"]')

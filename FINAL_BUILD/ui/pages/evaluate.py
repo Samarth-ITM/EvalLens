@@ -108,9 +108,13 @@ def render_evaluate_page() -> None:
     # Check status of evaluations
     is_human_done = has_human_scores(selected_eval_id)
     is_ai_done = has_ai_scores(selected_eval_id)
+    is_completed = ev_record["status"] == "completed"
+
+    if is_completed:
+        st.info("🔒 This evaluation is completed and locked. You are viewing read-only historical results.")
 
     # Workflow progress breadcrumb
-    if not is_human_done:
+    if not is_human_done and not is_completed:
         st.caption("📍 **Progress:** `1. Human Scoring (In Progress)` ➔ 2. Optional AI Evaluation ➔ 3. Comparison Dashboard")
     elif not is_ai_done:
         st.caption("📍 **Progress:** 1. Human Scoring (Completed ✅) ➔ `2. Optional AI Evaluation (Ready)` ➔ 3. Comparison Dashboard")
@@ -128,7 +132,7 @@ def render_evaluate_page() -> None:
         int(row["criterion_id"]): row for row in get_human_scores(selected_eval_id)
     }
 
-    if not is_human_done:
+    if not is_human_done and not is_completed:
         st.write(
             "Enter your scores and qualitative remarks below. "
             "Scores must be between 0 and the criterion maximum (using 0.5 increments). "
@@ -235,7 +239,7 @@ def render_evaluate_page() -> None:
                 if r["feedback"]:
                     st.caption(f"Remarks: {r['feedback']}")
 
-        if st.button("Edit Human Scores"):
+        if not is_completed and st.button("Edit Human Scores"):
             # Temporary state to allow modifying
             st.session_state[f"re_edit_human_{selected_eval_id}"] = True
             st.info("You can re-edit your scores above.")
@@ -266,7 +270,7 @@ def render_evaluate_page() -> None:
 
             col_rerun, _ = st.columns([1, 2])
             with col_rerun:
-                if st.button("Re-run AI Evaluation"):
+                if not is_completed and st.button("Re-run AI Evaluation"):
                     run_ai_eval_action(selected_eval_id, ev_record, submissions, criteria)
         else:
             st.write(
@@ -275,7 +279,7 @@ def render_evaluate_page() -> None:
             )
             col_run, _ = st.columns([1, 2])
             with col_run:
-                if st.button("Run AI Evaluation with Gemini", type="primary"):
+                if not is_completed and st.button("Run AI Evaluation with Gemini", type="primary"):
                     run_ai_eval_action(selected_eval_id, ev_record, submissions, criteria)
 
     st.markdown("---")

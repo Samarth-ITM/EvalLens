@@ -56,6 +56,8 @@ def init_state() -> None:
         st.session_state["ai_limitation_note"] = None
     if "approved_eval_id" not in st.session_state:
         st.session_state["approved_eval_id"] = None
+    if "pending_home_upload" not in st.session_state:
+        st.session_state["pending_home_upload"] = []
 
 
 def render_new_evaluation_page() -> None:
@@ -86,10 +88,12 @@ def render_setup_step() -> None:
     )
 
     with st.form("submission_form"):
+        suggested_title = st.session_state.get("suggested_evaluation_title", "")
         title = st.text_input(
             "Evaluation Title*",
+            value=suggested_title,
             placeholder="e.g. CS101 Final Project Evaluation or Midterm Essay",
-            help="A concise title to identify this evaluation session.",
+            help="Suggested from the document heading or filename. You can change it.",
         )
 
         col_type, col_prompt = st.columns([2, 1])
@@ -136,6 +140,9 @@ def render_setup_step() -> None:
             accept_multiple_files=True,
             help=f"Supported formats: {', '.join(clean_exts).upper()}",
         )
+        if st.session_state.get("pending_home_upload"):
+            pending_name = st.session_state["pending_home_upload"][0][0]
+            st.info(f"Document selected on Home: `{pending_name}`. Uploading another file here will replace it.")
 
         st.markdown("---")
         col_ai, col_manual = st.columns([1, 1])
@@ -160,6 +167,8 @@ def render_setup_step() -> None:
             for uf in uploaded_files:
                 fbytes = uf.read()
                 files_data.append((uf.name, fbytes))
+        elif st.session_state.get("pending_home_upload"):
+            files_data = list(st.session_state["pending_home_upload"])
 
         # Check that there is at least some content
         if not pasted_text.strip() and not files_data:
@@ -183,6 +192,8 @@ def render_setup_step() -> None:
 
         st.session_state["prepared_submission"] = prepared
         st.session_state["uploaded_files_data"] = files_data
+        st.session_state["pending_home_upload"] = []
+        st.session_state["suggested_evaluation_title"] = ""
 
         # If User chose AI Criteria Generation
         if submit_with_ai:

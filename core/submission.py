@@ -24,6 +24,17 @@ from core.document_parser import (
 from database.db import add_submission, create_evaluation
 
 
+def suggest_evaluation_title(filename: str, text: str = "") -> str:
+    """Suggest a user-facing evaluation name from a document heading or filename."""
+    for raw_line in text.splitlines():
+        line = raw_line.strip().lstrip("#").strip()
+        if line.startswith("<title>") and line.endswith("</title>"):
+            line = line[7:-8].strip()
+        if line and not line.startswith(("---", "===", "L1:")):
+            return line[:120]
+    return Path(filename).stem or "Untitled Evaluation"
+
+
 @dataclass
 class PreparedSubmission:
     """Represents a validated, aggregated submission ready for evaluation."""
