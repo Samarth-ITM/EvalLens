@@ -12,6 +12,7 @@
 * **Professor / Faculty Mentor:** Poonam Ma'am
 * **Cohort:** Sam Altman
 * **GitHub Repository:** [https://github.com/Samarth-ITM/EvalLens.git](https://github.com/Samarth-ITM/EvalLens.git)
+* **Live Production URL (Vercel):** [https://evallens-beta.vercel.app](https://evallens-beta.vercel.app)
 * **Access Passkey:** `evallens2026`
 * **Local Workspace URL:** `http://localhost:5173`
 
@@ -144,7 +145,7 @@ Where:
 
 ## 7. Automated Testing & Playwright Verification Results
 
-The complete React application was verified using an automated Playwright end-to-end test suite (`test_deep_verification.py`), executing 9 comprehensive test suites:
+The complete React application was verified using an automated Playwright end-to-end test suite (`test/test_deep_verification.py`), executing 9 comprehensive test suites with evidence archived in `test/screenshots/`:
 
 | Test Suite | Target Feature | Verification Criteria | Status |
 | :--- | :--- | :--- | :---: |

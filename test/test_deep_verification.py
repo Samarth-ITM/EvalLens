@@ -4,6 +4,8 @@ from playwright.sync_api import sync_playwright
 
 CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 APP_URL = "http://localhost:5173"
+SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
+os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 def run_deep_test():
     print("=" * 80)
@@ -37,7 +39,7 @@ def run_deep_test():
         page.click('button:has-text("Access Workspace")')
         page.wait_for_timeout(1000)
         page.wait_for_selector("text=Start a New Evaluation")
-        page.screenshot(path="screenshot_home.png")
+        page.screenshot(path=os.path.join(SCREENSHOT_DIR, "screenshot_home.png"))
         print("  ✓ Correct passkey unlocked workspace successfully. Captured screenshot_home.png.")
 
         # ----------------------------------------------------------------------
@@ -109,7 +111,7 @@ Backpressure propagation took up to 850ms to throttle upstream Kafka ingress top
         # Generate criteria with AI
         page.click('button:has-text("Analyze Submission with AI")')
         page.wait_for_selector("text=Review & Calibrate Rubric", timeout=10000)
-        page.screenshot(path="screenshot_rubric.png")
+        page.screenshot(path=os.path.join(SCREENSHOT_DIR, "screenshot_rubric.png"))
         print("  ✓ AI Rubric generated and calibrated successfully. Captured screenshot_rubric.png.")
 
         # Add custom criterion
@@ -145,7 +147,7 @@ Backpressure propagation took up to 850ms to throttle upstream Kafka ingress top
 
         # Verify Side-by-Side split view
         page.wait_for_selector("text=Examiner Evaluation & Scoring")
-        page.screenshot(path="screenshot_examiner_split_view.png")
+        page.screenshot(path=os.path.join(SCREENSHOT_DIR, "screenshot_examiner_split_view.png"))
         print("  ✓ Side-by-Side split screen mode active and captured.")
 
         # ----------------------------------------------------------------------
@@ -183,7 +185,7 @@ Backpressure propagation took up to 850ms to throttle upstream Kafka ingress top
         page.wait_for_selector("text=AI Suggested Mark:")
         page.wait_for_selector("text=Reason:")
         page.wait_for_selector("text=Critic:")
-        page.screenshot(path="screenshot_deep_evaluation.png")
+        page.screenshot(path=os.path.join(SCREENSHOT_DIR, "screenshot_deep_evaluation.png"))
         print("  ✓ Verified AI Suggested Mark, Reason, Critic, and Quoted Evidence.")
 
         # ----------------------------------------------------------------------
@@ -214,7 +216,7 @@ Backpressure propagation took up to 850ms to throttle upstream Kafka ingress top
         page.wait_for_timeout(800)
         page.wait_for_selector("text=Evaluation History")
         page.wait_for_selector(f"text={title_val}")
-        page.screenshot(path="screenshot_history.png")
+        page.screenshot(path=os.path.join(SCREENSHOT_DIR, "screenshot_history.png"))
         print("  ✓ Evaluation found in History with completed status.")
 
         print("\n" + "=" * 80)

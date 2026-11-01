@@ -121,17 +121,19 @@ For every criterion, the system displays three distinct, context-relevant sectio
 │       ├── scoring.js               # Dual alignment mathematics & error tracking
 │       ├── storage.js               # Browser-local state persistence
 │       └── textParser.js            # File parsing & word count utilities
-├── test_deep_verification.py       # Automated Playwright 9-suite E2E verification test
-└── test_react_app.py               # E2E flow test
+└── test/
+    ├── test_deep_verification.py   # Automated Playwright 9-suite E2E verification test
+    ├── test_react_app.py           # E2E flow test
+    └── screenshots/                # Captured workflow verification evidence
 ```
 
 ---
 
 ## 🧪 Automated End-to-End Verification
 
-The complete workflow has been verified with an automated Playwright test suite covering all 13 steps:
+The complete workflow has been verified with an automated Playwright test suite covering all 9 test suites:
 ```bash
-python test_react_app.py
+python test/test_deep_verification.py
 ```
 
 ### Verified Test Steps:

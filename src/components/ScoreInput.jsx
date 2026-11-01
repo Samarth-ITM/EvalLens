@@ -130,3 +130,4 @@ export default function ScoreInput({ value, maxMarks = 5, onChange, disabled = f
     </div>
   );
 }
+
