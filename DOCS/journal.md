@@ -634,3 +634,50 @@ Production Ready. The prototype has been verified through real user interface ex
 ### Confidence Assessment
 Ready for Five-Tester Evaluation. Concurrency stability is confirmed under multi-threaded stress, access is protected, evidence grounding and missing score handling are mathematically consistent, and 157 automated tests pass with 100% success.
 
+
+---
+
+## Entry 8: 2026-11-01 — Final Build, Independent Verification, Docker Packaging and Deployment
+
+### Objectives
+1. Construct a clean, isolated distributable package in `FINAL_BUILD/` containing strictly runtime assets, configuration, Docker specifications, and deployment blueprints.
+2. Ensure all development artifacts (tests, test fixtures, journals, reports, screenshots, `.git`, `.venv`, local `.db`, user uploads) are strictly excluded.
+3. Build and verify a production multi-stage Docker container (`Dockerfile` and `docker-compose.yml`) running as a non-root user with persistent volumes for `/app/data` and `/app/uploads`.
+4. Perform live end-to-end browser verification via Playwright against the Docker container (`http://localhost:8501`), creating evaluations, approving rubrics, and submitting scores.
+5. Verify container restart and data persistence across container recreation.
+6. Prepare Render deployment configuration (`render.yaml`) with persistent disk attachment.
+7. Conduct a formal Vercel compatibility audit documenting architectural incompatibilities (stateful WebSockets vs. ephemeral lambdas, SQLite filesystem requirements).
+8. Generate a distributable zip archive (`FINAL_BUILD.zip`).
+9. Generate `TEST/final_build_verification_report.md`.
+
+### Implementation Details & Changes Made
+1. **Dynamic Uploads Directory (`core/submission.py`):**
+   - Replaced static `UPLOADS_DIR` constant import with `settings.uploads_dir` so that `UPLOADS_PATH` environment variables (e.g. `/var/data/uploads` or `/app/uploads`) are respected dynamically.
+2. **Hosted Environment Password Guard (`config/settings.py`):**
+   - Added validation in `Settings`: when `EVALLENS_ENV` is set to `production`, `hosted`, or `render`, `EVALLENS_ACCESS_PASSWORD` must be explicitly configured, failing safely if omitted.
+3. **Docker Packaging (`FINAL_BUILD/Dockerfile` & `docker-compose.yml`):**
+   - Base image: `python:3.12-slim`.
+   - Dedicated non-root user `evallens` (UID 1000).
+   - Dedicated persistent volumes: `evallens-data` and `evallens-uploads`.
+   - Healthcheck curling `/_stcore/health`.
+   - Dynamically binds to `0.0.0.0` and respects `$PORT`.
+4. **Distributable Assembly (`FINAL_BUILD/` & `FINAL_BUILD.zip`):**
+   - Copied strictly runtime code: `app.py`, `core/`, `config/`, `database/`, `ui/`, `.streamlit/config.toml`, `requirements.txt`, `render.yaml`, `Dockerfile`, `docker-compose.yml`, `.env.example`, `.dockerignore`, `.gitignore`, and `README.md`.
+   - Created `FINAL_BUILD.zip` (60 KB) for easy portability.
+5. **Docker Browser Automation & Persistence Verification (`TEST/integration/test_docker_container_e2e.py`):**
+   - Automated Chrome browser testing against `http://localhost:8501`.
+   - Authenticated through passkey gate (`evallens2026`).
+   - Created "Docker Container Production Evaluation", approved rubric, and submitted human evaluation.
+   - Restarted container via `docker compose restart evallens` and verified that evaluation records persisted intact from the SQLite volume mount.
+
+### Actual Test Results
+- **Automated Pytest Suite:** **159 passed in 24.99s** (159 passed, 0 failed, 0 errors).
+- **Docker Build:** `final_build-evallens:latest` built successfully.
+- **Docker Runtime:** Container started healthy on port 8501 (`HTTP 200 OK`).
+- **Docker Browser Workflow & Persistence:** PASSED (All steps completed, data persisted across restart).
+- **Package Archive:** `FINAL_BUILD.zip` created at 60 KB.
+
+### Confidence Assessment
+Production Ready. The distributable package is self-contained, tested in isolation, containerized with verified volume persistence, and ready for deployment to Render or local distribution via Docker.
+
+

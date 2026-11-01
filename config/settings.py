@@ -66,10 +66,21 @@ class Settings:
         self.uploads_dir.mkdir(parents=True, exist_ok=True)
 
         # Basic access password for private 5-person prototype
-        raw_pwd = os.getenv("EVALLENS_ACCESS_PASSWORD", "evallens2026").strip()
-        self.access_password: Optional[str] = (
-            None if raw_pwd.lower() in ("", "none", "disable", "disabled", "false") else raw_pwd
-        )
+        is_hosted = self.env in ("production", "hosted", "render")
+        raw_pwd = os.getenv("EVALLENS_ACCESS_PASSWORD")
+        if is_hosted:
+            if not raw_pwd or not raw_pwd.strip():
+                raise ValueError(
+                    f"EVALLENS_ACCESS_PASSWORD must be explicitly configured when EVALLENS_ENV is "
+                    f"'{self.env}'. Unrestricted public access is prohibited in hosted deployments."
+                )
+            self.access_password: Optional[str] = raw_pwd.strip()
+        else:
+            default_pwd = "evallens2026"
+            pwd_val = raw_pwd.strip() if raw_pwd is not None else default_pwd
+            self.access_password = (
+                None if pwd_val.lower() in ("", "none", "disable", "disabled", "false") else pwd_val
+            )
 
         # Optional environment fallback for Gemini API key
         self._env_gemini_api_key: Optional[str] = (

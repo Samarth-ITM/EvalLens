@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 
-from config.settings import UPLOADS_DIR
+from config.settings import settings
 from core.document_parser import (
     MAX_SUBMISSION_WORDS,
     ParsedDocument,
@@ -171,10 +171,11 @@ def save_submission_to_db(
             # Save file to uploads/
             safe_name = sanitize_filename(doc.filename)
             unique_filename = f"{eval_id}_{uuid.uuid4().hex[:8]}_{safe_name}"
-            dest_path = (UPLOADS_DIR / unique_filename).resolve()
+            target_uploads_dir = settings.uploads_dir
+            dest_path = (target_uploads_dir / unique_filename).resolve()
             
             # Security verification: path traversal prevention
-            if not str(dest_path).startswith(str(UPLOADS_DIR.resolve())):
+            if not str(dest_path).startswith(str(target_uploads_dir.resolve())):
                 raise ValueError(f"Security error: path traversal outside uploads dir detected for '{doc.filename}'.")
 
             try:

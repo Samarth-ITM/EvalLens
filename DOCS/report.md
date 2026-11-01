@@ -2,7 +2,7 @@
 
 **Product Title:** Human and AI Evaluation Comparison Tool  
 **Category:** AI Evaluation  
-**Current Status:** Five-Person Prototype Ready — Concurrency Hardened (WAL Mode), Passkey Protected (`evallens2026`), & Live Gemini Verified  
+**Current Status:** Distributable & Independently Verified Release (v1.0.0) — Packaged in `FINAL_BUILD/`, Docker Verified, & Render Ready  
 **Maintained by:** Implementation Agent (Antigravity)  
 **Product Owner & System Architect:** User  
 
@@ -495,6 +495,24 @@ All tests executed via `.venv/bin/pytest -v`.
 - [x] Full automated test suite expanded to 157 tests (100% pass rate in 1.06s).
 - [x] Headed browser test re-verified with live access password gate and persistence across reload.
 - [x] Comprehensive acceptance report generated at `TEST/prototype_acceptance_report.md`.
+
+### Series 8: Final Build, Independent Verification, Docker Packaging and Deployment
+- [x] Completely separate distributable folder created (`FINAL_BUILD/`).
+- [x] Development cruft excluded (0 tests, 0 journals, 0 reports, 0 screenshots, 0 git, 0 venv, 0 databases).
+- [x] Runtime dependencies isolated in `FINAL_BUILD/requirements.txt` (lean production requirements).
+- [x] Hardened Docker container (`FINAL_BUILD/Dockerfile`) using `python:3.12-slim` and non-root `evallens` user.
+- [x] Multi-container orchestration defined in `FINAL_BUILD/docker-compose.yml` with persistent volume mounts.
+- [x] Render deployment blueprint created (`FINAL_BUILD/render.yaml`) with persistent disk attachment.
+- [x] Distributable zip archive created (`FINAL_BUILD.zip`, 60 KB).
+- [x] Comprehensive deployment and user documentation written (`FINAL_BUILD/README.md`).
+- [x] Hosted environment security guard implemented (safe failure if `EVALLENS_ACCESS_PASSWORD` missing in prod).
+- [x] Dynamic uploads directory resolved from `settings.uploads_dir` across container volumes.
+- [x] Docker image built (`final_build-evallens:latest`) and container executed locally.
+- [x] Playwright Chrome browser automated against live Docker container (`http://localhost:8501`).
+- [x] Container restart and volume persistence verified (evaluation records survived container restart).
+- [x] Architectural incompatibility analysis completed for Vercel (Render selected as official host).
+- [x] Automated test suite expanded to 159 tests (100% pass rate in 24.99s).
+- [x] Final build verification report generated at `TEST/final_build_verification_report.md`.
 
 ---
 

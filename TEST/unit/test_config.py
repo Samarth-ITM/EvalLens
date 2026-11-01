@@ -46,3 +46,18 @@ def test_settings_security_repr() -> None:
     if app_settings.access_password:
         assert app_settings.access_password not in repr_str
 
+
+def test_hosted_environment_requires_explicit_password(monkeypatch) -> None:
+    """Verify hosted environment fails safely if EVALLENS_ACCESS_PASSWORD is missing."""
+    import pytest
+    monkeypatch.setenv("EVALLENS_ENV", "production")
+    monkeypatch.delenv("EVALLENS_ACCESS_PASSWORD", raising=False)
+    with pytest.raises(ValueError) as excinfo:
+        Settings()
+    assert "EVALLENS_ACCESS_PASSWORD must be explicitly configured" in str(excinfo.value)
+
+    # When explicitly provided, it succeeds
+    monkeypatch.setenv("EVALLENS_ACCESS_PASSWORD", "custom-prod-pass-123")
+    prod_settings = Settings()
+    assert prod_settings.access_password == "custom-prod-pass-123"
+
