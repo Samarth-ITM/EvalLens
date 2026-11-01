@@ -34,13 +34,16 @@ def render_home_page() -> None:
 
     if not evaluations:
         st.info("No evaluations yet.")
-        st.caption("When you create evaluations in upcoming sessions, they will be listed here.")
+        st.caption("When you create evaluations and approve rubrics, they will be listed here.")
     else:
         for ev in evaluations[:5]:
             with st.container():
-                st.markdown(f"**{ev['title']}** — Status: `{ev['status']}`")
+                st.markdown(
+                    f"**{ev['title']}** — Type: `{ev['submission_type']}` | Status: `{ev['status']}`"
+                )
                 if ev["description"]:
                     st.write(ev["description"])
-                st.caption(f"Created: {ev['created_at']}")
+                st.caption(
+                    f"Words: {ev['total_words']:,} | Created: {ev['created_at']}"
+                )
                 st.markdown("---")
-

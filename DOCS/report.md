@@ -2,7 +2,7 @@
 
 **Product Title:** Human and AI Evaluation Comparison Tool  
 **Category:** AI Evaluation  
-**Current Status:** Series 1 Complete (Series 1 of 5)  
+**Current Status:** Series 2 Complete (Series 2 of 5)  
 **Maintained by:** Implementation Agent (Antigravity)  
 **Product Owner & System Architect:** User  
 
@@ -10,12 +10,9 @@
 
 ## 1. Product Overview
 
-EvalLens is an AI evaluation comparison tool designed to help evaluators and organizations assess submitted work consistently and transparently.
+EvalLens is an AI evaluation comparison tool designed to help evaluators and organizations assess submitted work consistently, rigorously, and transparently.
 
-The application allows users to submit work (documents or text), leverages Google Gemini AI to analyze the submission and propose structured evaluation criteria, provides a human review interface to approve or edit rubrics, and then enables independent evaluation runs:
-1. **Human Evaluation:** Direct scoring and qualitative feedback recorded against approved criteria.
-2. **AI Evaluation:** Automated, independent scoring and rationale generation by Google Gemini using the identical criteria.
-3. **Comparison Dashboard:** Side-by-side alignment, score variance, and agreement analysis.
+The workflow begins by accepting submissions (documents, source code, or pasted text) across 13 formats. Google Gemini AI analyzes the work to propose structured, evidence-grounded criteria. The human evaluator reviews, refines, reorders, and explicitly approves the rubric before any evaluation occurs. Independent scoring (both human and AI) and alignment comparisons follow in subsequent series.
 
 ### Core Principle
 **AI assists the evaluation process; the human controls the final evaluation.** The user retains authority over rubric approval and final grading.
@@ -24,9 +21,9 @@ The application allows users to submit work (documents or text), leverages Googl
 
 ## 2. Current Development Phase
 
-- **Active Series:** Series 1 of 5 (Foundation, Architecture, and Local Setup)
-- **Phase Goal:** Establish repository foundation, application skeleton, SQLite persistence layer, in-memory BYOK (Bring Your Own Key) Gemini configuration, navigation views, documentation, and automated test suite.
-- **Series 1 Status:** Complete and verified.
+- **Active Series:** Series 2 of 5 (Submission and AI Criteria Generation)
+- **Phase Goal:** Implement document extraction for 13 supported formats, enforce strict 5,000-word submission limit and 10 MB file limits, build Gemini criteria generation with 3 prompt strategies and evidence grounding, create interactive rubric editing and explicit approval, and store separate AI proposals and approved rubrics in SQLite.
+- **Series 2 Status:** Complete and verified.
 
 ---
 
@@ -39,19 +36,23 @@ The application allows users to submit work (documents or text), leverages Googl
 | SQLite Initialization & Automatic Schema Setup | Series 1 | Implemented | Tested and passed |
 | Distinct Schema for Human vs. AI Scores | Series 1 | Implemented | Tested and passed |
 | BYOK (Bring Your Own Key) Gemini Manager | Series 1 | Implemented | Tested and passed |
-| API Key Masking (`AIza••••••••xxxx`) | Series 1 | Implemented | Tested and passed |
 | In-Memory Session Storage (Zero disk/DB persistence) | Series 1 | Implemented | Tested and passed |
-| Real Live Connection Test to Gemini API | Series 1 | Implemented | Tested and passed |
-| Error Message Sanitization (Key leak prevention) | Series 1 | Implemented | Tested and passed |
-| Human-Only Mode (Operational without API key) | Series 1 | Implemented | Tested and passed |
-| Streamlit UI Skeleton (Home, New Eval, History, Settings) | Series 1 | Implemented | Tested and passed |
-| Responsive, Jargon-Free Product Interface | Series 1 | Implemented | Tested and passed |
-| Honest Empty States ("No evaluations yet") | Series 1 | Implemented | Tested and passed |
-| Automated Test Suite in `TEST/` (Unit + Integration) | Series 1 | Implemented | Tested and passed |
-| Maintained Project Report & Append-Only Journal | Series 1 | Implemented | Tested and passed |
-| Submission & Document Parsing | Series 2 | Not implemented | Not tested |
-| Gemini Rubric Criteria Generation | Series 2 | Not implemented | Not tested |
-| Human Rubric Approval & Editing Interface | Series 2 | Not implemented | Not tested |
+| Document Extraction (TXT, MD, PDF, DOCX) | Series 2 | Implemented | Tested and passed |
+| Code File Inspection (PY, CPP, H, HPP, JAVA, JS, TS, JSON, HTML, CSS, SQL) | Series 2 | Implemented | Tested and passed |
+| 5,000-Word Total Submission Limit Enforcement | Series 2 | Implemented | Tested and passed |
+| 10 MB Per-File Limit Enforcement | Series 2 | Implemented | Tested and passed |
+| Rejection of Unsupported Formats (ZIP, PPTX, image formats, OCR) | Series 2 | Implemented | Tested and passed |
+| Separation of Graded Submission vs Reference Material | Series 2 | Implemented | Tested and passed |
+| Multi-file + Pasted Text Aggregation | Series 2 | Implemented | Tested and passed |
+| Gemini Criteria Generation with Evidence Grounding | Series 2 | Implemented | Tested and passed |
+| Three Prompt Strategies (V1 Basic, V2 Instructions, V3 Grounded Default) | Series 2 | Implemented | Tested and passed |
+| Verbatim Quotation Grounding and Line/Page Citation | Series 2 | Implemented | Tested and passed |
+| Human Rubric Review Interface (Edit, Add, Delete, Reorder) | Series 2 | Implemented | Tested and passed |
+| Dynamic Total Marks Calculation (Default: 5 marks/criterion) | Series 2 | Implemented | Tested and passed |
+| Explicit Rubric Approval & Database Persistence | Series 2 | Implemented | Tested and passed |
+| Distinguishable AI Proposals vs. Human-Approved Rubrics in SQLite | Series 2 | Implemented | Tested and passed |
+| Human-Only Workflow (Manual Rubric Creation without API Key) | Series 2 | Implemented | Tested and passed |
+| Automated Test Suite (53 unit & integration tests) | Series 1 & 2 | Implemented | Tested and passed |
 | Human Scoring & AI Scoring Execution | Series 3 | Not implemented | Not tested |
 | Comparison Analytics & Dashboard | Series 3 | Not implemented | Not tested |
 | Comprehensive Edge Case & Reliability Suite | Series 4 | Not implemented | Not tested |
@@ -61,39 +62,14 @@ The application allows users to submit work (documents or text), leverages Googl
 
 ## 4. Architecture and Technology Stack
 
-The application enforces strict separation of concerns between presentation, domain logic, data persistence, and external AI services:
-
 - **Language:** Python 3.12 (compatible with Python 3.11+)
-- **User Interface:** Streamlit (clean layout, minimal custom CSS, no superfluous animations)
-- **AI Integration:** Google GenAI Python SDK (`google-genai>=2.30.0`), using current models (`gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-4-argon`)
-- **Database:** SQLite (`sqlite3` standard library) with foreign key constraints enabled
+- **UI Framework:** Streamlit
+- **AI Integration:** Google GenAI Python SDK (`google-genai>=2.30.0`), targeting models `gemini-3.8-flash`, `gemini-3.5-flash-lite`, and `gemini-4-argon`
+- **Document Processing:** `pypdf>=5.0.0` for PDF page and text extraction; `python-docx>=1.1.0` for Word documents; native UTF-8/Latin-1 text decoders with line numbering
+- **Database:** SQLite (`sqlite3` standard library) with foreign keys and migrations
 - **Data Validation:** Pydantic v2 (`pydantic>=2.7.0`)
-- **Visualizations:** Plotly (`plotly>=5.20.0`)
-- **Environment Management:** `python-dotenv` for optional local `.env` variables
 - **Testing:** `pytest>=8.0.0`
-- **Version Control:** Git
-
-### Architecture Diagram
-```
-┌────────────────────────────────────────────────────────┐
-│                   Streamlit UI Layer                   │
-│   (app.py, ui/pages/*, ui/components/*, ui/styles/*)   │
-└───────────────┬────────────────────────┬───────────────┘
-                │                        │
-                ▼                        ▼
-┌───────────────────────────────┐ ┌──────────────────────┐
-│       Core Domain Logic       │ │ Database Access Layer│
-│  - core/ai_client.py (BYOK)   │ │  - database/db.py    │
-│  - core/validators.py         │ │  - database/schema.sql│
-│  - Future placeholders        │ └──────────┬───────────┘
-└───────────────┬───────────────┘            │
-                │                            ▼
-                ▼                 ┌──────────────────────┐
-┌───────────────────────────────┐ │  SQLite Database     │
-│   External Google Gemini API  │ │  (data/evallens.db)  │
-│   (Official google-genai SDK) │ └──────────────────────┘
-└───────────────────────────────┘
-```
+- **Environment Management:** `python-dotenv`
 
 ---
 
@@ -101,9 +77,9 @@ The application enforces strict separation of concerns between presentation, dom
 
 ```
 EvalLens/
-├── app.py                      # Main Streamlit application and routing entry point
-├── requirements.txt            # Project dependencies
-├── README.md                   # Comprehensive setup and user guide
+├── app.py                      # Main Streamlit application and view routing
+├── requirements.txt            # Python dependencies (updated with pypdf and python-docx)
+├── README.md                   # User guide, setup instructions, and Series 2 workflow
 ├── pytest.ini                  # Pytest configuration (pythonpath, testpaths)
 ├── .env.example                # Example environment variables (no secrets)
 ├── .gitignore                  # Git exclusions for .venv, data, caches, keys
@@ -112,24 +88,24 @@ EvalLens/
 │   └── settings.py             # Pathlib-based settings, model definitions, env loading
 │
 ├── core/
-│   ├── submission.py           # [Placeholder] Submission processing (Series 2)
-│   ├── document_parser.py      # [Placeholder] Document extraction (Series 2)
+│   ├── submission.py           # Submission validation, word counting, disk and DB persistence
+│   ├── document_parser.py      # Multi-format text extraction, line/page markers, limits
 │   ├── ai_client.py            # Gemini BYOK client manager, masking, live connection test
-│   ├── criteria_generator.py   # [Placeholder] AI criteria generation (Series 2)
-│   ├── rubric.py               # [Placeholder] Rubric management (Series 2)
+│   ├── criteria_generator.py   # Prompts (V1, V2, V3), Gemini calling, evidence grounding
+│   ├── rubric.py               # EditableRubric models, reordering, total marks, approval
 │   ├── evaluator.py            # [Placeholder] Evaluation orchestration (Series 3)
 │   ├── comparison.py           # [Placeholder] Alignment & score comparison (Series 3)
-│   └── validators.py           # Pydantic validation schemas
+│   └── validators.py           # Pydantic validation schemas (criteria, submissions, keys)
 │
 ├── database/
-│   ├── db.py                   # SQLite connection manager, parameterized queries, table init
-│   └── schema.sql              # Normalized schema with separated human & AI scores
+│   ├── db.py                   # SQLite connection manager, parameterized queries, migrations
+│   └── schema.sql              # Normalized database schema with separate AI proposal & approved rubrics
 │
 ├── ui/
 │   ├── pages/
-│   │   ├── home.py             # Home overview & recent evaluations
-│   │   ├── new_evaluation.py   # New evaluation placeholder (Series 2 notice)
-│   │   ├── history.py          # Database-backed evaluation history
+│   │   ├── home.py             # Home overview & recent evaluations listing
+│   │   ├── new_evaluation.py   # Multi-step submission, AI criteria generation, rubric editor
+│   │   ├── history.py          # Database-backed history with approved rubrics & criteria
 │   │   └── settings_page.py    # BYOK Gemini setup, connection test, model selector
 │   ├── components/
 │   │   └── header.py           # Shared product header
@@ -142,15 +118,19 @@ EvalLens/
 │
 ├── TEST/
 │   ├── unit/
-│   │   ├── test_ai_client.py   # Unit tests for BYOK handling, masking, sanitization
-│   │   ├── test_config.py      # Unit tests for settings, path resolution, security repr
-│   │   └── test_validators.py  # Unit tests for Pydantic models
+│   │   ├── test_ai_client.py           # BYOK handling, masking, sanitization
+│   │   ├── test_config.py              # Settings, path resolution, security repr
+│   │   ├── test_validators.py          # Pydantic models & validation rules
+│   │   ├── test_document_parser.py     # Extraction across 13 formats, word limits, size checks
+│   │   ├── test_criteria_generator.py  # Prompt generation, schema validation, mocked AI, dedup
+│   │   └── test_rubric.py              # Rubric editing, total marks, reordering
 │   ├── integration/
-│   │   ├── test_database.py    # Integration tests for SQLite init, tables, constraints
-│   │   └── test_imports.py     # Integration tests verifying all modules import cleanly
+│   │   ├── test_database.py                    # SQLite init, tables, foreign keys
+│   │   ├── test_imports.py                     # Clean imports of all modules
+│   │   └── test_submission_and_rubric_db.py    # End-to-end submission, AI proposals, rubric approval
 │   ├── fixtures/
-│   │   └── sample_data.py      # Temporary database test fixtures
-│   └── README.md               # Test runner documentation
+│   │   └── sample_data.py              # Temporary database test fixtures
+│   └── README.md                       # Test instructions
 │
 ├── data/
 │   └── .gitkeep                # Local database storage directory (gitignored)
@@ -163,183 +143,127 @@ EvalLens/
 
 ## 6. Files Created and Modified
 
-All files created in this initial series are new:
-- `.env.example` (Created)
-- `.gitignore` (Created)
-- `requirements.txt` (Created)
-- `pytest.ini` (Created)
-- `README.md` (Created)
-- `app.py` (Created)
-- `config/settings.py` (Created)
-- `core/validators.py` (Created)
-- `core/ai_client.py` (Created)
-- `core/submission.py` (Created - placeholder)
-- `core/document_parser.py` (Created - placeholder)
-- `core/criteria_generator.py` (Created - placeholder)
-- `core/rubric.py` (Created - placeholder)
-- `core/evaluator.py` (Created - placeholder)
-- `core/comparison.py` (Created - placeholder)
-- `database/schema.sql` (Created)
-- `database/db.py` (Created)
-- `ui/styles/main.css` (Created)
-- `ui/components/header.py` (Created)
-- `ui/pages/home.py` (Created)
-- `ui/pages/new_evaluation.py` (Created)
-- `ui/pages/history.py` (Created)
-- `ui/pages/settings_page.py` (Created)
-- `TEST/README.md` (Created)
-- `TEST/fixtures/__init__.py` (Created)
-- `TEST/fixtures/sample_data.py` (Created)
-- `TEST/unit/__init__.py` (Created)
-- `TEST/unit/test_config.py` (Created)
-- `TEST/unit/test_ai_client.py` (Created)
-- `TEST/unit/test_validators.py` (Created)
-- `TEST/integration/__init__.py` (Created)
-- `TEST/integration/test_database.py` (Created)
-- `TEST/integration/test_imports.py` (Created)
-- `data/.gitkeep` (Created)
-- `uploads/.gitkeep` (Created)
-- `DOCS/report.md` (Created)
-- `DOCS/journal.md` (Created)
+### Created in Series 2
+- `TEST/unit/test_document_parser.py`
+- `TEST/unit/test_criteria_generator.py`
+- `TEST/unit/test_rubric.py`
+- `TEST/integration/test_submission_and_rubric_db.py`
+
+### Modified in Series 2
+- `requirements.txt` (Added `pypdf>=5.0.0` and `python-docx>=1.1.0`)
+- `database/schema.sql` (Added `ai_criteria_proposals` table and columns for submission metadata, prompt versions, and approved rubric tracking)
+- `database/db.py` (Added automated schema migration runner, CRUD operations for evaluations, submissions, AI proposals, and approved rubrics)
+- `core/validators.py` (Added `CriterionProposal`, `CriteriaProposalResponse`, deduplication logic, and `EvaluationCreate` fields)
+- `core/document_parser.py` (Implemented multi-format parsing for 13 extensions, line/page tracking, 5,000-word limit, and 10 MB check)
+- `core/submission.py` (Implemented aggregation, disk persistence to `uploads/`, and database saving)
+- `core/criteria_generator.py` (Implemented prompts V1, V2, V3, structured JSON parsing, evidence grounding, and error sanitization)
+- `core/rubric.py` (Implemented `EditableCriterion`, `EditableRubric`, reordering, total mark sum, and approval persistence)
+- `ui/pages/new_evaluation.py` (Replaced placeholder with full 3-step interactive evaluation setup, review, editing, and approval UI)
+- `ui/pages/history.py` (Updated to display approved rubrics, criteria details, and submission counts)
+- `ui/pages/home.py` (Updated to show recent evaluations with submission type and word counts)
+- `README.md` (Updated status to Series 2, added step-by-step workflow guide)
+- `DOCS/report.md` (Updated with Series 2 implementations, tests, and roadmap)
+- `DOCS/journal.md` (Appended Series 2 entry)
 
 ---
 
 ## 7. Database Design
 
-The SQLite database uses strict relational modeling with foreign keys and indexes:
+The SQLite database enforces strict relational integrity with foreign keys and cascade deletes:
 
-1. **`evaluations`**: Records each evaluation session (`id`, `title`, `description`, `status`, `created_at`, `updated_at`).
-2. **`submissions`**: Stores submitted artifacts or raw text associated with an evaluation (`id`, `evaluation_id`, `title`, `content`, `file_name`, `file_path`, `file_type`, `created_at`).
-3. **`rubrics`**: Stores rubric containers linked to an evaluation session (`id`, `evaluation_id`, `title`, `description`, `status`, `created_at`, `updated_at`).
-4. **`rubric_criteria`**: Contains individual rubric criteria (`id`, `rubric_id`, `name`, `description`, `max_score`, `weight`, `order_index`, `created_at`).
-5. **`human_scores`**: Stores human evaluator scores and feedback (`id`, `evaluation_id`, `criterion_id`, `score`, `feedback`, `evaluator_name`, `created_at`, `updated_at`).
-6. **`ai_scores`**: Stores AI-generated scores, reasoning, evidence text, and model identifier (`id`, `evaluation_id`, `criterion_id`, `score`, `reasoning`, `evidence_text`, `model_name`, `created_at`, `updated_at`).
+1. **`evaluations`**: Evaluation sessions (`id`, `title`, `description`, `submission_type`, `instructions`, `reference_material`, `status`, `prompt_version`, `total_words`, `created_at`, `updated_at`).
+2. **`submissions`**: Uploaded or pasted content linked to an evaluation (`id`, `evaluation_id`, `title`, `content`, `file_name`, `file_path`, `file_type`, `word_count`, `warnings`, `created_at`).
+3. **`ai_criteria_proposals`**: Pristine, immutable AI criteria suggestions (`id`, `evaluation_id`, `name`, `description`, `why_it_matters`, `max_marks`, `evidence_guidance`, `evidence_excerpt`, `evidence_location`, `scoring_guidance`, `prompt_version`, `order_index`, `created_at`).
+4. **`rubrics`**: Approved or active evaluation rubrics (`id`, `evaluation_id`, `title`, `description`, `status`, `total_marks`, `is_approved`, `approved_at`, `prompt_version`, `created_at`, `updated_at`).
+5. **`rubric_criteria`**: Human-approved, edited, or manually created criteria (`id`, `rubric_id`, `name`, `description`, `why_it_matters`, `max_score`, `weight`, `evidence_guidance`, `evidence_excerpt`, `evidence_location`, `scoring_guidance`, `is_ai_generated`, `order_index`, `created_at`).
+6. **`human_scores` & `ai_scores`**: Distinct score tables (reserved for Series 3).
 
-### Core Schema Safeguards
-- **Separate Human and AI Score Tables:** Human and AI scores are maintained in separate tables (`human_scores` and `ai_scores`) with foreign key constraints back to `rubric_criteria` and `evaluations`.
-- **No API Keys in Database:** The schema contains no credential or token fields.
-- **Parameterized SQL:** All queries in `database/db.py` use SQLite parameterized parameter substitution (`?`).
-- **Cascade Deletes:** Deleting an evaluation cascades cleanly to associated submissions, rubrics, criteria, and scores.
+### Key Architectural Safeguard
+The initial AI proposal is archived in `ai_criteria_proposals`, while the human-edited and approved criteria reside in `rubrics` and `rubric_criteria`. This keeps the AI proposal and the approved rubric distinguishable for future auditability and comparison.
 
 ---
 
 ## 8. BYOK Implementation and Security Approach
 
-The BYOK (Bring Your Own Key) architecture adheres strictly to the 13 security requirements:
-
-1. **Zero Hardcoded Keys:** Codebase contains zero hardcoded API keys.
-2. **Zero Key Commits:** Gitignore blocks `.env`, local configs, and databases from repository tracking.
-3. **Masked UI Display:** Key is displayed only in masked format (`AIza••••••••xxxx`), displaying at most the first 4 and last 4 characters.
-4. **No Database Persistence:** Keys are never passed to or stored in SQLite.
-5. **No Key in Documentation:** Documentation contains only format examples (`AIzaSy...`).
-6. **No Key in Logs or Exceptions:** `sanitize_error_message` proactively inspects exceptions and strips any occurrence of the raw API key.
-7. **Session Memory Only:** Keys entered in Settings are held in Streamlit session memory (`st.session_state`).
-8. **No Plaintext Persistence:** Closing or restarting the application drops the session key; users are explicitly notified that they may need to re-enter it upon restart.
-9. **User Revocation / Removal:** A "Remove Key" button immediately purges the key and active connection status from session memory.
-10. **Human-Only Operation:** If no key is entered, the application functions cleanly without error; AI-specific actions are disabled with clear guidance.
-11. **Live Connection Test:** Testing the connection issues an actual live request to the Gemini API (`client.models.generate_content`) to verify authorization. Success is only reported if the API call succeeds.
-12. **Supported Models:** Built-in model selector supporting current Gemini models (`gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-4-argon`).
+- In-memory session retention (`st.session_state`) ensures API keys are never persisted to SQLite or written to disk.
+- Keys are masked in the UI (`AIza••••••••xxxx`).
+- All exceptions are intercepted by `sanitize_error_message` to prevent key exposure in logs or UI error banners.
+- When no API key is available, the human-only workflow enables full evaluation creation and manual rubric building without failure.
 
 ---
 
 ## 9. Installation Instructions
 
-### Prerequisites
-- Python 3.11+ or Python 3.12 (CPython 3.12 recommended)
-- Git
+```bash
+# 1. Activate virtual environment
+source .venv/bin/activate       # macOS / Linux
+# or .venv\Scripts\Activate.ps1 # Windows PowerShell
 
-### Setup Steps
-1. Clone the repository and navigate into the project directory:
-   ```bash
-   cd PE-MiniProject
-   ```
-2. Create and activate a Python virtual environment:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
-   ```
-3. Install project dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. (Optional) Create local `.env`:
-   ```bash
-   cp .env.example .env
-   ```
+# 2. Install dependencies (including pypdf and python-docx)
+pip install -r requirements.txt
+```
 
 ---
 
 ## 10. Commands to Run the Application
 
-Launch the Streamlit web interface with:
-
 ```bash
 streamlit run app.py
 ```
-
-Access the UI locally in your browser at `http://localhost:8501`.
+Open `http://localhost:8501` in your browser.
 
 ---
 
 ## 11. Tests Executed and Actual Results
 
-All tests were executed using pytest via `.venv/bin/pytest -v`.
+All tests executed via `.venv/bin/pytest -v`.
 
 ### Test Summary
-- **Total Tests Collected:** 33
-- **Passed:** 33
+- **Total Tests Collected:** 53
+- **Passed:** 53
 - **Failed:** 0
 - **Errors:** 0
-- **Duration:** 0.76 seconds
+- **Duration:** 2.20 seconds
 
 ### Detailed Results by Suite
-1. **`TEST/integration/test_database.py` (4 tests)**
-   - `test_database_initialization`: PASSED (verified all 6 tables and indexes are created)
-   - `test_schema_separate_scores`: PASSED (verified human_scores and ai_scores are distinct tables)
-   - `test_idempotent_initialization`: PASSED (verified multiple schema runs cause no corruption)
-   - `test_parameterized_query_and_foreign_keys`: PASSED (verified foreign key enforcement & queries)
-2. **`TEST/integration/test_imports.py` (16 tests)**
-   - Verified that all 16 application modules import cleanly without missing dependencies:
-     - `config.settings`: PASSED
-     - `database.db`: PASSED
-     - `core.ai_client`: PASSED
-     - `core.validators`: PASSED
-     - `core.submission`: PASSED
-     - `core.document_parser`: PASSED
-     - `core.criteria_generator`: PASSED
-     - `core.rubric`: PASSED
-     - `core.evaluator`: PASSED
-     - `core.comparison`: PASSED
-     - `ui.components.header`: PASSED
-     - `ui.pages.home`: PASSED
-     - `ui.pages.new_evaluation`: PASSED
-     - `ui.pages.history`: PASSED
-     - `ui.pages.settings_page`: PASSED
-     - `app`: PASSED
-3. **`TEST/unit/test_ai_client.py` (5 tests)**
-   - `test_missing_key_handled_safely`: PASSED (no crash, clear guidance message)
-   - `test_empty_string_key_handled_safely`: PASSED (whitespace handled safely)
-   - `test_key_masking`: PASSED (correct prefix/suffix masking)
-   - `test_sanitize_error_message_strips_key`: PASSED (leaked keys in exceptions replaced)
-   - `test_client_manager_key_lifecycle`: PASSED (set, read masked, clear key lifecycle)
-4. **`TEST/unit/test_config.py` (4 tests)**
-   - `test_base_dir_resolution`: PASSED (pathlib resolution verified)
-   - `test_directories_creation`: PASSED (`data/` and `uploads/` directories exist)
-   - `test_settings_initialization`: PASSED (default model and metadata verified)
-   - `test_settings_security_repr`: PASSED (settings repr hides credentials)
-5. **`TEST/unit/test_validators.py` (4 tests)**
-   - `test_api_key_validator_valid`: PASSED (clean keys accepted)
-   - `test_api_key_validator_rejects_whitespace`: PASSED (internal whitespace rejected)
-   - `test_evaluation_create_validation`: PASSED (title required, status patterns enforced)
-   - `test_rubric_criterion_validation`: PASSED (score ranges and weights validated)
+1. **`TEST/unit/test_document_parser.py` (8 tests):**
+   - `test_txt_and_md_extraction`: PASSED
+   - `test_pdf_extraction_with_page_markers`: PASSED
+   - `test_scanned_pdf_warning`: PASSED
+   - `test_docx_extraction`: PASSED
+   - `test_code_file_extraction_supported_languages`: PASSED (11 code languages verified)
+   - `test_unsupported_file_formats_rejected`: PASSED (ZIP, PPTX, PNG, JPG, EXE rejected)
+   - `test_file_size_limit_enforced`: PASSED (> 10 MB rejected)
+   - `test_word_counting_and_5000_limit`: PASSED (5,000 words allowed, 5,001 rejected)
+2. **`TEST/unit/test_criteria_generator.py` (8 tests):**
+   - `test_prompt_versions_building`: PASSED (V1, V2, V3 prompt structure verified)
+   - `test_clean_json_text`: PASSED (fenced JSON blocks parsed)
+   - `test_criteria_schema_validation_and_deduplication`: PASSED (case-insensitive deduplication)
+   - `test_criteria_schema_rejects_empty_list`: PASSED
+   - `test_missing_key_raises_value_error`: PASSED
+   - `test_empty_submission_raises_value_error`: PASSED
+   - `test_mocked_gemini_generation_success`: PASSED (mocked Gemini structured output)
+   - `test_mocked_gemini_invalid_json`: PASSED
+3. **`TEST/unit/test_rubric.py` (2 tests):**
+   - `test_rubric_creation_and_total_marks`: PASSED
+   - `test_rubric_editing_and_reordering`: PASSED (add, edit, move up, move down, delete)
+4. **`TEST/integration/test_submission_and_rubric_db.py` (2 tests):**
+   - `test_submission_and_rubric_persistence_lifecycle`: PASSED (multi-file submission persisted)
+   - `test_db_rubric_approval_isolation`: PASSED (AI proposal vs approved rubric isolation verified)
+5. **Series 1 Regression Tests (33 tests):**
+   - `test_database.py` (4 tests): PASSED
+   - `test_imports.py` (16 tests): PASSED
+   - `test_ai_client.py` (5 tests): PASSED
+   - `test_config.py` (4 tests): PASSED
+   - `test_validators.py` (4 tests): PASSED
 
 ---
 
 ## 12. Known Limitations
 
-1. **Session Scope of API Key:** The Gemini API key is intentionally retained only in server-side session memory. If the Streamlit application server process terminates or restarts, the user must re-enter their key unless configured via `.env`.
-2. **Local Single-User Execution:** As specified for Series 1, credential management and evaluations are local-first and single-user. Multi-tenant authentication is deferred to future production versions.
-3. **Series 2 & 3 Placeholders:** Submission parsing, automated criteria generation, human grading, and comparison visualizations are not yet functional in Series 1 and are clearly marked as scheduled for later series.
+1. **Scanned PDFs:** Optical Character Recognition (OCR) is intentionally excluded in this prototype. Scanned PDFs yield an informative warning.
+2. **Pure Code Inspection:** Code files are evaluated as structured text; code execution or unit test runners are not implemented.
+3. **Session-Scoped BYOK:** Terminating the server process requires re-entering the Gemini key unless loaded from `.env`.
 
 ---
 
@@ -347,45 +271,59 @@ All tests were executed using pytest via `.venv/bin/pytest -v`.
 
 | Item | Context | Impact | Status |
 |---|---|---|---|
-| Supported Document Formats | Series 2 will introduce file processing. Preferred initial formats: `.txt`, `.md`, and `.pdf`. | Affects document parser dependencies (e.g. PyPDF / pdfplumber). | Open for confirmation by Product Owner. |
-| Scoring Scale Standard | Schema supports configurable `max_score` (default 10.0). Whether to support 1-5 Likert scales vs. 0-10 or 0-100 percentage scales. | Affects criteria generator prompts and comparison calculation. | Open for confirmation by Product Owner. |
+| Criteria Scale Granularity | Currently criteria default to 5.0 marks with 0.5 increments. | Scoring interface in Series 3 will use this scale. | Open for confirmation by Product Owner. |
+| Automatic Word Count Trimming vs User Reduction | Current behavior strictly rejects submissions > 5,000 words. | Complies with instruction: "Do not silently truncate content." | Closed / Confirmed per spec. |
 
 ---
 
-## 14. Remaining Tasks (Roadmap to Series 2)
+## 14. Remaining Tasks (Roadmap to Series 3)
 
-- [ ] Implement `core/document_parser.py` for `.txt`, `.md`, and `.pdf` document extraction.
-- [ ] Implement `core/submission.py` to handle uploads, storage in `uploads/`, and database records.
-- [ ] Implement `core/criteria_generator.py` using `google-genai` to generate evaluation rubrics from submissions.
-- [ ] Build editable rubric review UI in `ui/pages/new_evaluation.py` allowing humans to approve, add, edit, or delete criteria.
-- [ ] Implement citation/evidence extraction referencing submission snippets.
+- [ ] Implement human scoring interface in `ui/pages/` and `core/evaluator.py`.
+- [ ] Implement optional AI scoring runner using Gemini with approved criteria.
+- [ ] Build alignment and score comparison calculations in `core/comparison.py`.
+- [ ] Build comparison dashboard with Plotly visual cards.
+- [ ] Connect human and AI score persistence into SQLite `human_scores` and `ai_scores` tables.
 
 ---
 
 ## 15. Master Project Checklist
 
 ### Series 1: Foundation, Architecture, and Local Setup
-- [x] Inspect existing workspace and initialize git repository.
-- [x] Create modular repository directory structure (`config/`, `core/`, `database/`, `ui/`, `DOCS/`, `TEST/`, `data/`, `uploads/`).
-- [x] Path handling with `pathlib` and environment configuration in `config/settings.py`.
-- [x] SQLite schema (`database/schema.sql`) and database manager (`database/db.py`) with automatic initialization.
-- [x] Separate `human_scores` and `ai_scores` schema design.
-- [x] Gemini BYOK foundation with masked display, session storage, live test, and error sanitization (`core/ai_client.py`).
-- [x] Streamlit multi-view UI (`app.py`, `ui/pages/*`, `ui/components/header.py`, `ui/styles/main.css`).
-- [x] Honest empty states ("No evaluations yet") and plain-English messaging.
-- [x] Placeholders for future modules in `core/` without premature implementation.
-- [x] Automated test suite in `TEST/` (33 tests, all passing).
-- [x] Verified application execution and HTTP 200 response on `http://localhost:8501`.
+- [x] Repository structure created cleanly and accurately.
+- [x] Application skeleton built with Streamlit.
+- [x] Local setup runnable via one documented command (`streamlit run app.py`).
+- [x] BYOK configuration foundation implemented with strict security.
+- [x] SQLite database foundation initialized with separate `human_scores` and `ai_scores` tables.
+- [x] Jargon-free interface with honest empty states ("No evaluations yet").
 - [x] Maintain project report (`DOCS/report.md`).
 - [x] Maintain append-only journal (`DOCS/journal.md`).
 
-### Series 2: Submission and AI Criteria (Pending)
-- [ ] Submission interface.
-- [ ] File and text processing.
-- [ ] Evaluation modes.
-- [ ] Gemini criteria generation.
-- [ ] Evidence references.
-- [ ] Editable and approvable rubrics.
+### Series 2: Submission and AI Criteria Generation
+- [x] User can create an evaluation.
+- [x] User can select submission type (Written Work, Code, Software Project, Technical Report, Custom).
+- [x] User can add optional evaluation instructions.
+- [x] User can add optional reference material (kept separate from submitted work).
+- [x] User can paste submission text.
+- [x] User can upload supported files (TXT, MD, PDF, DOCX, PY, CPP, H, HPP, JAVA, JS, TS, JSON, HTML, CSS, SQL).
+- [x] Multiple file uploads supported.
+- [x] TXT and MD extraction with line numbers.
+- [x] PDF extraction with page markers.
+- [x] DOCX extraction with paragraphs and tables.
+- [x] Code file inspection as text.
+- [x] Combined submission limit of 5,000 words enforced.
+- [x] Oversized submissions rejected with detected word count.
+- [x] Gemini criteria generation using BYOK client.
+- [x] Three prompt versions maintained (V1, V2, V3 default).
+- [x] Evidence grounding with verbatim excerpts and line/page citations.
+- [x] Criteria can be edited, added, removed, and reordered.
+- [x] Maximum marks configurable (default 5.0).
+- [x] Total marks calculate dynamically.
+- [x] Human can explicitly approve the rubric.
+- [x] Approved rubric and AI proposals persist distinguishably in SQLite.
+- [x] Existing Series 1 tests pass (33/33).
+- [x] New Series 2 tests pass (20/20).
+- [x] DOCS/report.md updated.
+- [x] DOCS/journal.md received new appended entry.
 
 ### Series 3: Human and AI Evaluation (Pending)
 - [ ] Human scoring.
@@ -408,4 +346,3 @@ All tests were executed using pytest via `.venv/bin/pytest -v`.
 - [ ] Installation on another laptop.
 - [ ] Demonstration.
 - [ ] Final acceptance testing.
-
