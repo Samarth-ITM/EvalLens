@@ -415,3 +415,38 @@ input:user-valid, textarea:user-valid {
   word-break: break-word;
   color: #334155;
 }
+
+/* Print & PDF Export Styling */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+  }
+
+  .no-print, header, nav, .btn, .explainer-banner {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.5in !important;
+  }
+
+  .card, .paper-sheet, .comparison-row {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    page-break-inside: avoid;
+    margin-bottom: 1rem !important;
+  }
+
+  .paper-sheet-content {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}

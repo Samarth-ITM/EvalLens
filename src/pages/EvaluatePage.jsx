@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CheckCircle2,
   Sparkles,
@@ -14,13 +14,15 @@ import {
   History,
   BookOpen,
   Columns,
-  MessageSquare,
-  AlertTriangle,
-  Lightbulb
+  Printer,
+  Download,
+  CheckCheck,
+  FileCheck
 } from 'lucide-react';
 import { calculateComparison } from '../utils/scoring';
 import { evaluateSubmissionAI } from '../utils/gemini';
 import DocumentReaderSheet from '../components/DocumentReaderSheet';
+import ScoreInput from '../components/ScoreInput';
 
 export default function EvaluatePage({
   evaluations,
@@ -38,15 +40,43 @@ export default function EvaluatePage({
   const [isSubmittingAI, setIsSubmittingAI] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showDocumentSheet, setShowDocumentSheet] = useState(true);
-  const [splitView, setSplitView] = useState(false);
+  const [splitView, setSplitView] = useState(true);
 
   // Sync state if selected evaluation changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentEval) {
       setHumanScores(currentEval.human_scores || {});
       setErrorMsg('');
+      
+      // Always automatically perform AI evaluation if missing
+      const hasAI = currentEval.ai_scores && Object.keys(currentEval.ai_scores).length > 0;
+      if (!hasAI && !isSubmittingAI) {
+        autoRunAI(currentEval);
+      }
     }
   }, [currentEval?.id]);
+
+  const autoRunAI = async (evalObj) => {
+    setIsSubmittingAI(true);
+    try {
+      const aiResults = await evaluateSubmissionAI({
+        contentText: evalObj.content_text,
+        criteria: evalObj.criteria,
+        instructions: evalObj.instructions,
+        apiKey,
+        model
+      });
+      const updated = {
+        ...evalObj,
+        ai_scores: aiResults
+      };
+      onUpdateEvaluation(updated);
+    } catch (err) {
+      console.warn('AI evaluation warning:', err.message);
+    } finally {
+      setIsSubmittingAI(false);
+    }
+  };
 
   if (!currentEval) {
     return (
@@ -62,7 +92,7 @@ export default function EvaluatePage({
     );
   }
 
-  const isCompleted = currentEval.status === 'completed';
+  const isCompleted = currentEval.status === 'completed' || currentEval.status === 'approved';
   const hasHumanDone = Object.keys(currentEval.human_scores || {}).length > 0;
   const hasAIDone = Object.keys(currentEval.ai_scores || {}).length > 0;
 
@@ -87,20 +117,15 @@ export default function EvaluatePage({
     });
   };
 
-  const handleSubmitHuman = () => {
+  const handleSubmitHumanScores = () => {
     for (const c of currentEval.criteria) {
       const entry = humanScores[c.id];
       if (!entry || entry.score === undefined || entry.score === null) {
-        setErrorMsg(`Please enter a score for "${c.name}".`);
+        setErrorMsg(`Please award a score for "${c.name}".`);
         return;
       }
       if (entry.score < 0 || entry.score > c.max_marks) {
         setErrorMsg(`Score for "${c.name}" must be between 0 and ${c.max_marks}.`);
-        return;
-      }
-      const remainder = (entry.score * 10) % 5;
-      if (remainder !== 0) {
-        setErrorMsg(`Score for "${c.name}" must use 0.5 increments (e.g. 0, 0.5, 1.0, 1.5).`);
         return;
       }
     }
@@ -109,69 +134,46 @@ export default function EvaluatePage({
     const updated = {
       ...currentEval,
       human_scores: humanScores,
-      status: hasAIDone ? 'completed' : 'human_completed'
+      status: 'human_submitted'
     };
     onUpdateEvaluation(updated);
   };
 
-  const handleRunAI = async () => {
-    setIsSubmittingAI(true);
-    setErrorMsg('');
-
-    try {
-      const aiResults = await evaluateSubmissionAI({
-        contentText: currentEval.content_text,
-        criteria: currentEval.criteria,
-        instructions: currentEval.instructions,
-        apiKey,
-        model
-      });
-
-      const updated = {
-        ...currentEval,
-        ai_scores: aiResults,
-        status: hasHumanDone ? 'completed' : currentEval.status
-      };
-      onUpdateEvaluation(updated);
-    } catch (err) {
-      setErrorMsg(err.message || 'Error running AI evaluation');
-    } finally {
-      setIsSubmittingAI(false);
-    }
-  };
-
-  const handleLockEvaluation = () => {
+  const handleSaveAndApprove = () => {
     const updated = {
       ...currentEval,
-      status: 'completed'
+      human_scores: humanScores,
+      status: 'completed',
+      approved_at: new Date().toISOString()
     };
     onUpdateEvaluation(updated);
   };
 
-  const handleSaveAndDone = () => {
-    if (currentEval.status !== 'completed' && (hasHumanDone || hasAIDone)) {
-      const updated = {
-        ...currentEval,
-        status: 'completed'
-      };
-      onUpdateEvaluation(updated);
-    }
-    if (onGoHome) {
-      onGoHome();
-    }
+  const handleExportPDF = () => {
+    window.print();
+  };
+
+  const handleExportJSON = () => {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(currentEval, null, 2));
+    const a = document.createElement('a');
+    a.href = dataStr;
+    a.download = `${currentEval.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   const comp = calculateComparison(currentEval.criteria, currentEval.human_scores, currentEval.ai_scores);
 
   return (
     <div>
-      {/* Top Header: Session Selection & Examiner View Controls */}
-      <div style={{
+      {/* Top Header: Navigation & Action Toolbar (Hidden in Print View) */}
+      <div className="no-print" style={{
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-subtle)',
         borderRadius: 'var(--radius-lg)',
-        padding: '1rem 1.25rem',
-        marginBottom: '1.25rem',
+        padding: '0.875rem 1.25rem',
+        marginBottom: '1rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -191,7 +193,7 @@ export default function EvaluatePage({
           >
             {evaluations.map((ev) => (
               <option key={ev.id} value={ev.id}>
-                {ev.title} {ev.status === 'completed' ? '(Completed 🔒)' : '(In Progress)'}
+                {ev.title} {ev.status === 'completed' ? '(Approved & Completed 🔒)' : '(Active)'}
               </option>
             ))}
           </select>
@@ -205,7 +207,7 @@ export default function EvaluatePage({
             title="Toggle examiner reading paper view"
           >
             <BookOpen size={14} color="var(--primary)" />
-            <span>{showDocumentSheet ? 'Hide Document Paper' : 'View Document Paper'}</span>
+            <span>{showDocumentSheet ? 'Hide Paper' : 'View Paper'}</span>
           </button>
 
           <button
@@ -214,10 +216,28 @@ export default function EvaluatePage({
               setSplitView(!splitView);
               if (!showDocumentSheet) setShowDocumentSheet(true);
             }}
-            title="Split screen: read paper on left, score on right"
+            title="Toggle Side-by-Side Split Screen"
           >
             <Columns size={14} />
-            <span>{splitView ? 'Stacked View' : 'Side-by-Side'}</span>
+            <span>{splitView ? 'Side-by-Side (Active)' : 'Stacked View'}</span>
+          </button>
+
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={handleExportPDF}
+            title="Export evaluation as PDF report or print"
+          >
+            <Printer size={14} />
+            <span>Export as PDF</span>
+          </button>
+
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={handleExportJSON}
+            title="Download JSON record"
+          >
+            <Download size={14} />
+            <span>Export JSON</span>
           </button>
 
           <button className="btn btn-secondary btn-sm" onClick={onGoHistory} title="View all completed evaluations">
@@ -227,12 +247,12 @@ export default function EvaluatePage({
         </div>
       </div>
 
-      {/* Persistent Navigation & Save Bar */}
-      <div style={{
+      {/* Progress Status Bar (Hidden in Print View) */}
+      <div className="no-print" style={{
         background: '#ffffff',
         border: '1px solid var(--border-subtle)',
         borderRadius: 'var(--radius-md)',
-        padding: '0.75rem 1.25rem',
+        padding: '0.65rem 1.15rem',
         marginBottom: '1.25rem',
         display: 'flex',
         justifyContent: 'space-between',
@@ -241,58 +261,58 @@ export default function EvaluatePage({
         gap: '0.75rem',
         boxShadow: 'var(--shadow-sm)'
       }}>
-        {/* Progress pills */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', flexWrap: 'wrap' }}>
-          <span className={`badge ${hasHumanDone ? 'badge-success' : 'badge-primary'}`}>
-            1. Human Scoring: {hasHumanDone ? 'Submitted ✓' : 'In Progress'}
-          </span>
-          <span style={{ color: 'var(--text-tertiary)' }}>➔</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', flexWrap: 'wrap' }}>
           <span className={`badge ${hasAIDone ? 'badge-purple' : 'badge-warning'}`}>
-            2. AI Evaluation: {hasAIDone ? 'Ready ✓' : 'Optional / Next'}
+            <Sparkles size={11} />
+            1. AI Evaluation: {isSubmittingAI ? 'Evaluating...' : (hasAIDone ? 'Ready ✓' : 'Pending')}
           </span>
           <span style={{ color: 'var(--text-tertiary)' }}>➔</span>
-          <span className={`badge ${isCompleted ? 'badge-success' : 'badge-primary'}`}>
-            3. Comparison: {isCompleted ? 'Saved & Locked 🔒' : 'Draft'}
+          <span className={`badge ${hasHumanDone ? 'badge-success' : 'badge-primary'}`}>
+            2. Human Scoring: {hasHumanDone ? 'Scores Submitted ✓' : 'In Progress'}
+          </span>
+          <span style={{ color: 'var(--text-tertiary)' }}>➔</span>
+          <span className={`badge ${isCompleted ? 'badge-success' : 'badge-warning'}`}>
+            3. Approval: {isCompleted ? 'Saved & Approved 🔒' : 'Awaiting Approval'}
           </span>
         </div>
 
-        {/* Direct Action Buttons: Proceed to Dashboard & Previous Results */}
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={handleSaveAndDone}
-            title="Save your current scores and proceed to dashboard"
-          >
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-secondary btn-sm" onClick={onGoHome}>
             <Home size={14} />
-            <span>Save & Done (Dashboard)</span>
-          </button>
-
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={onGoHistory}
-            title="View previous evaluation results"
-          >
-            <History size={14} />
-            <span>Previous Results</span>
+            <span>Dashboard</span>
           </button>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="banner banner-danger" style={{ marginBottom: '1.25rem' }}>
+        <div className="banner banner-danger no-print" style={{ marginBottom: '1.25rem' }}>
           <AlertCircle size={16} />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* Main Workspace Layout (Supports Split Mode) */}
+      {/* Print-Only Academic Report Header */}
+      <div className="print-only" style={{ display: 'none', marginBottom: '2rem' }}>
+        <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: '1rem', marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>EvalLens: Academic Assessment Report</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.9rem', color: '#475569' }}>
+            <span><strong>Student:</strong> Samarth Navale (Roll: 150096725148)</span>
+            <span><strong>Subject:</strong> AI Prompt Engineering &bull; <strong>Professor:</strong> Poonam Ma'am</span>
+          </div>
+          <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.25rem' }}>
+            <strong>Document Title:</strong> {currentEval.title} &bull; <strong>Cohort:</strong> Sam Altman
+          </div>
+        </div>
+      </div>
+
+      {/* Main Workspace Layout (Side-by-Side Split View) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: splitView && showDocumentSheet ? 'minmax(420px, 1fr) minmax(460px, 1.2fr)' : '1fr',
+        gridTemplateColumns: splitView && showDocumentSheet ? 'minmax(400px, 1fr) minmax(460px, 1.25fr)' : '1fr',
         gap: '1.5rem',
         alignItems: 'start'
       }}>
-        {/* Left Side: Examiner Document Reading Sheet */}
+        {/* Left Side: Examiner A4 Paper Reading Sheet */}
         {showDocumentSheet && (
           <div style={{ position: splitView ? 'sticky' : 'static', top: '1.5rem' }}>
             <DocumentReaderSheet
@@ -304,21 +324,20 @@ export default function EvaluatePage({
           </div>
         )}
 
-        {/* Right Side (or Below): Scoring & Comparison */}
+        {/* Right Side: Examiner Scoring & Context-Grounded AI Insights */}
         <div>
-          {/* Section 1: Human Scoring Card */}
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div className="card-title" style={{ margin: 0 }}>
                 <CheckCircle2 size={20} color="var(--primary)" />
-                Examiner Human Scoring
+                Examiner Evaluation & Scoring
               </div>
               <span className="badge badge-primary">
                 {currentEval.criteria.length} Criteria &bull; Total Max {currentEval.criteria.reduce((s, c) => s + c.max_marks, 0)} pts
               </span>
             </div>
             <div className="card-subtitle">
-              Read the document and enter your score for each criterion (0.5 mark increments). You can also run AI evaluation below to inspect AI suggested marks, reasons, and critique.
+              Inspect the AI suggested marks, reasons, and constructive critique below, then award your score using the interactive 0.5 step controls.
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.5rem' }}>
@@ -366,122 +385,109 @@ export default function EvaluatePage({
                       </div>
                     )}
 
-                    {/* AI Suggested Mark, Reason & Critic Callout (When AI Scores are Available) */}
-                    {aiEntry && (
-                      <div style={{
-                        background: 'linear-gradient(135deg, #fbfaff 0%, #f5f3ff 100%)',
-                        border: '1px solid var(--purple-border)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '0.875rem 1rem',
-                        marginBottom: '1rem'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                          <span className="badge badge-purple">
-                            <Sparkles size={12} />
-                            AI Suggested Mark: {aiEntry.score} / {c.max_marks} pts
-                          </span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--purple)', fontWeight: 600 }}>
-                            Confidence: {aiEntry.confidence || 'High'}
-                          </span>
-                        </div>
-
-                        {/* Reason */}
-                        <div style={{ fontSize: '0.825rem', color: '#334155', marginBottom: '0.4rem', lineHeight: 1.5 }}>
-                          <strong style={{ color: 'var(--purple)' }}>Reason: </strong>
-                          {aiEntry.reason || aiEntry.rationale || 'Meets standard expectations for this criterion based on the submitted text.'}
-                        </div>
-
-                        {/* Critic */}
-                        <div style={{ fontSize: '0.825rem', color: '#475569', marginBottom: '0.4rem', lineHeight: 1.5 }}>
-                          <strong style={{ color: '#b45309' }}>Critic: </strong>
-                          {aiEntry.critic || 'Could provide deeper empirical evidence and expand on edge-case considerations.'}
-                        </div>
-
-                        {/* Quoted Evidence */}
-                        {aiEntry.evidence_quote && (
-                          <div style={{
-                            display: 'flex',
-                            gap: '0.4rem',
-                            alignItems: 'flex-start',
-                            fontSize: '0.775rem',
-                            color: '#1e40af',
-                            background: '#eff6ff',
-                            padding: '0.35rem 0.6rem',
-                            borderRadius: 'var(--radius-sm)',
-                            borderLeft: '2px solid var(--primary)'
-                          }}>
-                            <Quote size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
-                            <span><em>"{aiEntry.evidence_quote}"</em></span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Human Score Input & Remarks */}
-                    <div className="grid-2">
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">
-                          Your Score (0 - {c.max_marks})
-                        </label>
-                        <input
-                          type="number"
-                          step="0.5"
-                          min="0"
-                          max={c.max_marks}
-                          className="form-control"
-                          value={h.score !== undefined ? h.score : 0}
-                          disabled={isCompleted}
-                          onChange={(e) => handleScoreChange(c.id, e.target.value)}
-                        />
+                    {/* AI Suggested Mark, Reason & Critic Callout (Always Shown) */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #fbfaff 0%, #f5f3ff 100%)',
+                      border: '1px solid var(--purple-border)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '0.875rem 1rem',
+                      marginBottom: '1rem'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span className="badge badge-purple" style={{ fontSize: '0.775rem' }}>
+                          <Sparkles size={12} />
+                          AI Suggested Mark: {aiEntry?.score !== undefined ? `${aiEntry.score} / ${c.max_marks} pts` : 'Analyzing...'}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--purple)', fontWeight: 600 }}>
+                          Confidence: {aiEntry?.confidence || 'High'}
+                        </span>
                       </div>
 
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">
-                          Examiner Remarks (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Your comments or justification..."
-                          value={h.feedback || ''}
-                          disabled={isCompleted}
-                          onChange={(e) => handleFeedbackChange(c.id, e.target.value)}
-                        />
+                      {/* Reason */}
+                      <div style={{ fontSize: '0.825rem', color: '#334155', marginBottom: '0.45rem', lineHeight: 1.5 }}>
+                        <strong style={{ color: 'var(--purple)' }}>Reason: </strong>
+                        {aiEntry?.reason || aiEntry?.rationale || 'Analyzing document context against criterion expectations...'}
                       </div>
+
+                      {/* Critic */}
+                      <div style={{ fontSize: '0.825rem', color: '#475569', marginBottom: '0.45rem', lineHeight: 1.5 }}>
+                        <strong style={{ color: '#b45309' }}>Critic: </strong>
+                        {aiEntry?.critic || 'Evaluating potential omissions, baseline controls, and empirical depth...'}
+                      </div>
+
+                      {/* Quoted Evidence */}
+                      {aiEntry?.evidence_quote && (
+                        <div style={{
+                          display: 'flex',
+                          gap: '0.4rem',
+                          alignItems: 'flex-start',
+                          fontSize: '0.775rem',
+                          color: '#1e40af',
+                          background: '#eff6ff',
+                          padding: '0.35rem 0.6rem',
+                          borderRadius: 'var(--radius-sm)',
+                          borderLeft: '2px solid var(--primary)'
+                        }}>
+                          <Quote size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
+                          <span><em>"{aiEntry.evidence_quote}"</em></span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Interactive Tactile Score Input Component */}
+                    <div style={{ marginBottom: '0.75rem' }}>
+                      <label className="form-label" style={{ marginBottom: '0.35rem' }}>
+                        Your Score (0 - {c.max_marks}):
+                      </label>
+                      <ScoreInput
+                        value={h.score !== undefined ? h.score : 0}
+                        maxMarks={c.max_marks}
+                        disabled={isCompleted}
+                        onChange={(val) => handleScoreChange(c.id, val)}
+                      />
+                    </div>
+
+                    {/* Qualitative Remarks */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>
+                        Examiner Remarks (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Examiner comments or justification..."
+                        value={h.feedback || ''}
+                        disabled={isCompleted}
+                        onChange={(e) => handleFeedbackChange(c.id, e.target.value)}
+                      />
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Human Score Submission & AI Run Buttons */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <button
-                className="btn btn-secondary"
-                style={{ color: 'var(--purple)', borderColor: 'var(--purple-border)' }}
-                onClick={handleRunAI}
-                disabled={isSubmittingAI}
-              >
-                <Sparkles size={16} />
-                <span>{isSubmittingAI ? 'Evaluating with Gemini...' : (hasAIDone ? 'Re-run AI Evaluation' : 'Run AI Evaluation')}</span>
-              </button>
-
-              {!isCompleted && (
-                <button className="btn btn-primary" onClick={handleSubmitHuman}>
-                  <CheckCircle2 size={16} />
-                  <span>Submit Human Scores</span>
+            {/* Primary Action Button: SUBMIT SCORES */}
+            {!isCompleted && (
+              <div className="no-print" style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
+                <button
+                  className="btn btn-primary"
+                  style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem', fontWeight: 700 }}
+                  onClick={handleSubmitHumanScores}
+                >
+                  <CheckCircle2 size={18} />
+                  <span>SUBMIT SCORES</span>
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Section 2: Comparison Dashboard (Rendered when both human & AI are done, or when evaluation is completed) */}
-          {(hasAIDone || isCompleted) && (
+          {/* Section 2: Comparison & Final SAVE AND APPROVE */}
+          {(hasHumanDone || isCompleted) && (
             <div className="card" style={{ marginTop: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div className="card-title" style={{ margin: 0 }}>
                   <BarChart2 size={20} color="var(--primary)" />
-                  Evaluation Comparison: Human vs. AI
+                  Evaluation Comparison & Approval
                 </div>
                 <span className={`badge ${
                   comp.alignmentCategory === 'Strong Agreement' ? 'badge-success' : 
@@ -491,10 +497,10 @@ export default function EvaluatePage({
                 </span>
               </div>
               <div className="card-subtitle">
-                Side-by-side score comparison, detailed AI suggested mark, reason, and constructive critique per criterion.
+                Side-by-side score comparison, variance metrics, and final sign-off.
               </div>
 
-              {/* Simplified KPI Boxes (Zero Fluff) */}
+              {/* KPI Stat Boxes */}
               <div className="grid-3" style={{ marginBottom: '1.5rem' }}>
                 <div className="stat-box">
                   <div className="stat-value" style={{ color: 'var(--primary)' }}>
@@ -518,19 +524,14 @@ export default function EvaluatePage({
                 </div>
               </div>
 
-              {/* Detailed Breakdown Per Criterion */}
+              {/* Criteria Progress Bars Breakdown */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.85rem', marginBottom: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Detailed Criteria Breakdown & Critique
-                </h4>
-
                 {comp.criterionComparisons.map((c) => {
                   const humanPct = c.maxMarks > 0 ? (c.humanScore / c.maxMarks) * 100 : 0;
                   const aiPct = c.maxMarks > 0 ? (c.aiScore / c.maxMarks) * 100 : 0;
 
                   return (
                     <div key={c.criterionId} className="comparison-row" style={{ marginBottom: '1rem' }}>
-                      {/* Criterion Header */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
                           {c.name}
@@ -542,8 +543,7 @@ export default function EvaluatePage({
                         </div>
                       </div>
 
-                      {/* Visual Comparison Progress Bars */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.85rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <span style={{ width: '65px', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>
                             Human
@@ -568,71 +568,13 @@ export default function EvaluatePage({
                           </span>
                         </div>
                       </div>
-
-                      {/* AI Suggested Mark, Reason, Critic & Evidence Callout */}
-                      <div style={{
-                        background: '#f8fafc',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '0.85rem 1rem',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.5rem'
-                      }}>
-                        {/* 1. AI Suggested Mark */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                          <Sparkles size={14} color="var(--purple)" />
-                          <strong style={{ color: 'var(--purple)' }}>AI Suggested Mark:</strong>
-                          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>
-                            {c.aiScore} / {c.maxMarks} pts
-                          </span>
-                        </div>
-
-                        {/* 2. Reason */}
-                        <div style={{ fontSize: '0.825rem', color: '#334155', lineHeight: 1.5 }}>
-                          <strong style={{ color: '#0369a1' }}>Reason: </strong>
-                          {c.aiReason || c.aiRationale || 'The submission directly demonstrates the necessary requirements for this criterion.'}
-                        </div>
-
-                        {/* 3. Critic */}
-                        <div style={{ fontSize: '0.825rem', color: '#334155', lineHeight: 1.5 }}>
-                          <strong style={{ color: '#b45309' }}>Critic: </strong>
-                          {c.aiCritic || 'The presentation could be strengthened by incorporating comparative benchmarks and addressing edge-case limitations.'}
-                        </div>
-
-                        {/* 4. Quoted Evidence */}
-                        {c.evidenceQuote && (
-                          <div style={{
-                            display: 'flex',
-                            gap: '0.4rem',
-                            alignItems: 'flex-start',
-                            fontSize: '0.775rem',
-                            color: '#1e40af',
-                            background: '#eff6ff',
-                            padding: '0.4rem 0.65rem',
-                            borderRadius: 'var(--radius-sm)',
-                            borderLeft: '2px solid var(--primary)',
-                            marginTop: '0.2rem'
-                          }}>
-                            <Quote size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
-                            <span><em>"{c.evidenceQuote}"</em></span>
-                          </div>
-                        )}
-
-                        {/* Human Feedback */}
-                        {c.humanFeedback && (
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.4rem', marginTop: '0.2rem' }}>
-                            <strong>Examiner Remarks:</strong> {c.humanFeedback}
-                          </div>
-                        )}
-                      </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Bottom Action Footer with Clear Buttons */}
-              <div style={{
+              {/* SAVE AND APPROVE Action Footer */}
+              <div className="no-print" style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -643,25 +585,30 @@ export default function EvaluatePage({
                 marginTop: '1.5rem'
               }}>
                 {!isCompleted ? (
-                  <button className="btn btn-success" onClick={handleLockEvaluation}>
-                    <Lock size={16} />
-                    <span>Mark Evaluation as Completed & Lock</span>
+                  <button
+                    className="btn btn-success"
+                    style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem', fontWeight: 700 }}
+                    onClick={handleSaveAndApprove}
+                  >
+                    <CheckCheck size={18} />
+                    <span>SAVE AND APPROVE</span>
                   </button>
                 ) : (
-                  <div style={{ fontSize: '0.85rem', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
-                    <CheckCircle2 size={16} />
-                    <span>Evaluation completed and locked in history.</span>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+                    <FileCheck size={18} />
+                    <span>Evaluation Approved & Locked Successfully</span>
                   </div>
                 )}
 
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  <button className="btn btn-primary" onClick={handleSaveAndDone}>
-                    <Home size={16} />
-                    <span>Save & Done (Proceed to Dashboard)</span>
+                  <button className="btn btn-secondary" onClick={handleExportPDF}>
+                    <Printer size={16} />
+                    <span>Export as PDF</span>
                   </button>
-                  <button className="btn btn-secondary" onClick={onGoHistory}>
-                    <History size={16} />
-                    <span>View Previous Results</span>
+
+                  <button className="btn btn-primary" onClick={onGoHome}>
+                    <Home size={16} />
+                    <span>Return to Dashboard</span>
                   </button>
                 </div>
               </div>

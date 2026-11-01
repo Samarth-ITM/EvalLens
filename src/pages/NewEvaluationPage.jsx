@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Edit3, Plus, Trash2, ArrowRight, Check, AlertCircle, FileText, BookOpen } from 'lucide-react';
+import { Sparkles, Plus, Trash2, ArrowRight, Check, AlertCircle, FileText, BookOpen } from 'lucide-react';
 import { countWords, suggestEvaluationTitle, readFileContent, MAX_FILE_SIZE_BYTES, MAX_SUBMISSION_WORDS } from '../utils/textParser';
 import { generateCriteriaAI } from '../utils/gemini';
 
@@ -86,35 +86,6 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handleManualRubric = () => {
-    if (!title.trim()) {
-      setErrorMsg('Please enter an evaluation title.');
-      return;
-    }
-    if (!contentText.trim()) {
-      setErrorMsg('Please paste submission content or upload a document.');
-      return;
-    }
-
-    setCriteria([
-      {
-        id: `crit-${Date.now()}-1`,
-        name: 'Technical Rigor & Accuracy',
-        max_marks: 5,
-        description: 'Soundness of arguments, accuracy of logic, and completeness.',
-        scoring_guidance: 'Award 4-5 marks for clear methodology with zero critical inaccuracies.'
-      },
-      {
-        id: `crit-${Date.now()}-2`,
-        name: 'Clarity & Coherence',
-        max_marks: 5,
-        description: 'Logical organization, clear documentation, and concise presentation.',
-        scoring_guidance: 'Deduct marks for disjointed reasoning or unclear explanations.'
-      }
-    ]);
-    setStep('rubric');
   };
 
   const handleUpdateCriterion = (idx, field, value) => {
@@ -217,7 +188,7 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
             Submission Setup
           </div>
           <div className="card-subtitle">
-            Provide the submission document and evaluation goals.
+            Upload the submission document. AI will automatically evaluate it and calibrate tailored rubric criteria.
           </div>
 
           <div className="form-group">
@@ -307,23 +278,16 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-            <button
-              className="btn btn-secondary"
-              onClick={handleManualRubric}
-              disabled={isGenerating || !contentText.trim() || isOverLimit}
-            >
-              <Edit3 size={16} />
-              <span>Create Rubric Manually</span>
-            </button>
-
+          {/* Single Focused AI Action Button (Manual Rubric Removed) */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
             <button
               className="btn btn-primary"
+              style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}
               onClick={handleGenerateAI}
               disabled={isGenerating || !contentText.trim() || isOverLimit}
             >
-              <Sparkles size={16} />
-              <span>{isGenerating ? 'Analyzing with AI...' : 'Analyze Submission with AI'}</span>
+              <Sparkles size={18} />
+              <span>{isGenerating ? 'Analyzing Submission with AI...' : 'Analyze Submission with AI'}</span>
             </button>
           </div>
         </div>
@@ -334,14 +298,14 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div className="card-title" style={{ margin: 0 }}>
               <Check size={20} color="var(--success)" />
-              Review & Customize Rubric
+              Review & Calibrate Rubric
             </div>
             <div className="badge badge-primary" style={{ fontSize: '0.8rem', padding: '0.3rem 0.75rem' }}>
               Total Marks: {totalMaxMarks} pts
             </div>
           </div>
           <div className="card-subtitle">
-            Review the proposed evaluation criteria. You can edit names, descriptions, marks, or add custom criteria before approving.
+            AI-calibrated evaluation criteria tailored to your submission. You can adjust criteria names, descriptions, or maximum marks before scoring.
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>

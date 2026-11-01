@@ -4,6 +4,16 @@
 
 ---
 
+### 🎓 Academic Submission Metadata
+* **Student Name:** Samarth Navale
+* **Roll Number:** 150096725148
+* **Subject:** AI Prompt Engineering
+* **Professor:** Poonam Ma'am
+* **Cohort:** Sam Altman
+* **Project:** Final Evaluator & Dual Human-AI Grading Comparison System
+
+---
+
 ## 🚀 Quick Start for Evaluation & Testing
 
 You can run EvalLens immediately with zero complex setup.
@@ -96,10 +106,11 @@ For every criterion, the system displays three distinct, context-relevant sectio
 │   │   ├── AccessGate.jsx           # Passkey authentication gate
 │   │   ├── Header.jsx               # Navigation bar & live status
 │   │   ├── DocumentReaderSheet.jsx  # A4 paper reading sheet with line numbers
-│   │   └── MicroExplainer.jsx       # 3-step animated tutorial walkthrough
+│   │   ├── MicroExplainer.jsx       # 3-step animated tutorial walkthrough
+│   │   └── ScoreInput.jsx           # Tactile 0.5-step pills & score steppers
 │   ├── pages/
 │   │   ├── HomePage.jsx             # Dashboard & quick upload
-│   │   ├── NewEvaluationPage.jsx    # Document setup & rubric calibration
+│   │   ├── NewEvaluationPage.jsx    # Document setup & AI rubric calibration
 │   │   ├── EvaluatePage.jsx         # Examiner scoring, AI critique & split view
 │   │   ├── HistoryPage.jsx          # Records, search filters & JSON export
 │   │   └── SettingsPage.jsx         # Gemini API key & model settings
@@ -110,8 +121,8 @@ For every criterion, the system displays three distinct, context-relevant sectio
 │       ├── scoring.js               # Dual alignment mathematics & error tracking
 │       ├── storage.js               # Browser-local state persistence
 │       └── textParser.js            # File parsing & word count utilities
-├── test_react_app.py           # Automated Playwright 13-step E2E verification test
-└── PYTHON_LEGACY/              # Archived legacy Python / Streamlit prototype
+├── test_deep_verification.py       # Automated Playwright 9-suite E2E verification test
+└── test_react_app.py               # E2E flow test
 ```
 
 ---
