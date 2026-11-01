@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Upload, FileText, ArrowRight, CheckCircle2, Clock, Sparkles, AlertCircle } from 'lucide-react';
 import { countWords, suggestEvaluationTitle, readFileContent, MAX_FILE_SIZE_BYTES, MAX_SUBMISSION_WORDS } from '../utils/textParser';
 import { calculateComparison } from '../utils/scoring';
+import MicroExplainer from '../components/MicroExplainer';
 
 export default function HomePage({ evaluations, onStartNewWithContent, onSelectEvaluation, setActiveNav }) {
   const [fastTrackText, setFastTrackText] = useState('');
@@ -61,6 +62,9 @@ export default function HomePage({ evaluations, onStartNewWithContent, onSelectE
 
   return (
     <div>
+      {/* Tiny Animated Walkthrough with Skip Option */}
+      <MicroExplainer />
+
       {/* Quick Start Card */}
       <div className="card" style={{ border: '1px solid var(--border-light)' }}>
         <div className="card-title">

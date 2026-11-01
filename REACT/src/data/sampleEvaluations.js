@@ -6,7 +6,7 @@ export const INITIAL_EVALUATIONS = [
     title: "Distributed Edge Anomaly Detection: Architecture & Performance Evaluation",
     submission_type: "Technical Report",
     instructions: "Evaluate the submitted technical report focusing on methodology, telemetry results, and edge hardware trade-offs.",
-    content_text: `# Distributed Edge Anomaly Detection: Architecture & Performance Evaluation\n\n## Abstract\nWe evaluate lightweight unsupervised anomaly detection on heterogeneous ARM edge clusters. Telemetry models were benchmarked across Raspberry Pi 4B and NVIDIA Jetson Nano under synthetic sensor fault injection.\n\n## Telemetry Results\nUnder fault injection scenarios (Table 2), isolation forests achieved 94.2% detection recall with 42ms median latency. Flash write cycles were reduced by 64% through write coalescing.\n\n## Edge Architecture Trade-Offs\nMemory consumption stabilized at 128 MB RAM per container node, ensuring zero thrashing across 72 hours continuous operation.`,
+    content_text: `# Distributed Edge Anomaly Detection: Architecture & Performance Evaluation\n\n## Abstract\nWe evaluate lightweight unsupervised anomaly detection on heterogeneous ARM edge clusters. Telemetry models were benchmarked across Raspberry Pi 4B and NVIDIA Jetson Nano under synthetic sensor fault injection.\n\n## Telemetry Results\nUnder fault injection scenarios (Table 2), isolation forests achieved 94.2% detection recall with 42ms median latency. Flash write cycles were reduced by 64% through write coalescing.\n\n## Edge Architecture Trade-Offs\nMemory consumption stabilized at 128 MB RAM per container node, ensuring zero thrashing across 72 hours continuous operation. However, real-time thermal throttling on the Jetson Nano under sustained ambient temperatures above 40°C was left for future work.`,
     word_count: 1338,
     status: "completed",
     created_at: "2026-11-01T14:20:00Z",
@@ -20,7 +20,7 @@ export const INITIAL_EVALUATIONS = [
       },
       {
         id: "crit-2",
-        name: "Telemetry Telemetry Results & Analysis",
+        name: "Telemetry Results & Latency Analysis",
         max_marks: 5,
         description: "Accuracy of detection metrics, latency profiles, and wear leveling data.",
         scoring_guidance: "Requires numeric citations for recall, latency, and memory footprint."
@@ -41,18 +41,24 @@ export const INITIAL_EVALUATIONS = [
     ai_scores: {
       "crit-1": {
         score: 4.5,
-        rationale: "The experimental baseline cleanly outlines the ARM cluster nodes and fault injection methodology.",
-        evidence_quote: "Telemetry models were benchmarked across Raspberry Pi 4B and NVIDIA Jetson Nano under synthetic sensor fault injection."
+        reason: "The experimental setup cleanly specifies ARM cluster hardware (Raspberry Pi 4B and Jetson Nano) alongside controlled synthetic sensor fault injections.",
+        critic: "The methodology does not describe baseline calibration procedures prior to synthetic fault introduction.",
+        evidence_quote: "Telemetry models were benchmarked across Raspberry Pi 4B and NVIDIA Jetson Nano under synthetic sensor fault injection.",
+        confidence: "High"
       },
       "crit-2": {
         score: 5.0,
-        rationale: "Comprehensive numeric telemetry benchmarks are provided with exact metrics.",
-        evidence_quote: "isolation forests achieved 94.2% detection recall with 42ms median latency."
+        reason: "Comprehensive telemetry metrics are reported with concrete numerical citations for detection recall and latency.",
+        critic: "Variance bounds or standard deviation percentiles (p99 latency) could be documented alongside the median.",
+        evidence_quote: "isolation forests achieved 94.2% detection recall with 42ms median latency.",
+        confidence: "High"
       },
       "crit-3": {
         score: 4.0,
-        rationale: "Strong focus on eMMC endurance and RAM bounds, though thermals are not reported.",
-        evidence_quote: "Flash write cycles were reduced by 64% through write coalescing. Memory consumption stabilized at 128 MB RAM."
+        reason: "Flash write cycle reduction (64%) through write coalescing directly addresses eMMC endurance constraints on edge devices.",
+        critic: "Thermal dissipation under extended compute loads is explicitly deferred rather than quantified with empirical temperature curves.",
+        evidence_quote: "Flash write cycles were reduced by 64% through write coalescing. Memory consumption stabilized at 128 MB RAM.",
+        confidence: "Medium"
       }
     }
   },
@@ -88,15 +94,18 @@ export const INITIAL_EVALUATIONS = [
     ai_scores: {
       "crit-201": {
         score: 5.0,
-        rationale: "Relational constraints and cascade rules strictly enforce parent-child integrity.",
-        evidence_quote: "org_id UUID REFERENCES organizations(id) ON DELETE CASCADE"
+        reason: "Relational constraints, gen_random_uuid() defaults, and cascade rules strictly enforce parent-child integrity without orphan vulnerabilities.",
+        critic: "Indices on foreign key columns (audit_logs.org_id) are not declared, which can degrade foreign key check performance at scale.",
+        evidence_quote: "org_id UUID REFERENCES organizations(id) ON DELETE CASCADE",
+        confidence: "High"
       },
       "crit-202": {
         score: 4.5,
-        rationale: "RLS policy restricts read queries to authorized organization members.",
-        evidence_quote: "USING (auth.uid() IN (SELECT user_id FROM organization_members WHERE org_id = audit_logs.org_id))"
+        reason: "Row Level Security is explicitly enabled and the policy restricts SELECT operations to authenticated members of the respective tenant organization.",
+        critic: "No INSERT, UPDATE, or DELETE policies are declared, leaving write operations blocked or default-rejected.",
+        evidence_quote: "USING (auth.uid() IN (SELECT user_id FROM organization_members WHERE org_id = audit_logs.org_id))",
+        confidence: "High"
       }
     }
   }
 ];
-

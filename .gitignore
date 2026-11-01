@@ -43,9 +43,11 @@ data/*
 *.sqlite
 *.sqlite3
 
-# Local Uploads
+# Local uploads & screenshots
 uploads/*
 !uploads/.gitkeep
+*.png
+.agents/
 
 # Pytest / Testing
 .pytest_cache/

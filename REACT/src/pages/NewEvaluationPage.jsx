@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Edit3, Plus, Trash2, ArrowRight, Check, AlertCircle, FileText } from 'lucide-react';
+import { Sparkles, Edit3, Plus, Trash2, ArrowRight, Check, AlertCircle, FileText, BookOpen } from 'lucide-react';
 import { countWords, suggestEvaluationTitle, readFileContent, MAX_FILE_SIZE_BYTES, MAX_SUBMISSION_WORDS } from '../utils/textParser';
 import { generateCriteriaAI } from '../utils/gemini';
 
@@ -160,8 +160,11 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
       status: 'pending_human',
       created_at: new Date().toISOString(),
       criteria: criteria.map((c) => ({
-        ...c,
-        max_marks: Number(c.max_marks) || 5
+        id: c.id || `crit-${Math.random().toString(36).substr(2, 9)}`,
+        name: c.name.trim(),
+        max_marks: Number(c.max_marks) || 5,
+        description: (c.description || '').trim(),
+        scoring_guidance: (c.scoring_guidance || '').trim()
       })),
       human_scores: {},
       ai_scores: {}
@@ -174,18 +177,29 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
 
   return (
     <div>
-      {/* Step Indicator */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
-        <span style={{ fontWeight: step === 'setup' ? 700 : 500, color: step === 'setup' ? 'var(--primary)' : 'var(--text-muted)' }}>
+      {/* Workflow Step Indicator */}
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--radius-md)',
+        padding: '0.75rem 1.25rem',
+        marginBottom: '1.25rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        fontSize: '0.85rem',
+        boxShadow: 'var(--shadow-sm)'
+      }}>
+        <span style={{ fontWeight: step === 'setup' ? 700 : 500, color: step === 'setup' ? 'var(--primary)' : 'var(--text-secondary)' }}>
           1. Submission Details
         </span>
-        <span style={{ color: 'var(--text-subtle)' }}>➔</span>
-        <span style={{ fontWeight: step === 'rubric' ? 700 : 500, color: step === 'rubric' ? 'var(--primary)' : 'var(--text-muted)' }}>
-          2. Rubric Review & Approval
+        <span style={{ color: 'var(--text-tertiary)' }}>➔</span>
+        <span style={{ fontWeight: step === 'rubric' ? 700 : 500, color: step === 'rubric' ? 'var(--primary)' : 'var(--text-secondary)' }}>
+          2. Rubric Review & Calibration
         </span>
-        <span style={{ color: 'var(--text-subtle)' }}>➔</span>
-        <span style={{ color: 'var(--text-subtle)' }}>
-          3. Scoring & Comparison
+        <span style={{ color: 'var(--text-tertiary)' }}>➔</span>
+        <span style={{ color: 'var(--text-tertiary)' }}>
+          3. Examiner Scoring & AI Comparison
         </span>
       </div>
 
@@ -244,8 +258,11 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
               <label className="form-label">
                 Upload File (Optional)
               </label>
-              <label className="btn btn-secondary" style={{ width: '100%', cursor: 'pointer' }}>
-                <span>{fileName ? `File: ${fileName}` : 'Choose File...'}</span>
+              <label className="btn btn-secondary" style={{ width: '100%', cursor: 'pointer', justifyContent: 'flex-start' }}>
+                <BookOpen size={16} color="var(--primary)" />
+                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                  {fileName ? `File: ${fileName}` : 'Choose Document or Code...'}
+                </span>
                 <input
                   type="file"
                   onChange={handleFileUpload}
@@ -275,7 +292,7 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
               <label className="form-label" htmlFor="eval-content" style={{ margin: 0 }}>
                 Submission Content*
               </label>
-              <span style={{ fontSize: '0.8rem', color: isOverLimit ? 'var(--danger)' : 'var(--text-muted)' }}>
+              <span style={{ fontSize: '0.8rem', color: isOverLimit ? 'var(--danger)' : 'var(--text-secondary)' }}>
                 {wordCount.toLocaleString()} / {MAX_SUBMISSION_WORDS.toLocaleString()} words
               </span>
             </div>
@@ -319,7 +336,7 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
               <Check size={20} color="var(--success)" />
               Review & Customize Rubric
             </div>
-            <div className="badge badge-primary">
+            <div className="badge badge-primary" style={{ fontSize: '0.8rem', padding: '0.3rem 0.75rem' }}>
               Total Marks: {totalMaxMarks} pts
             </div>
           </div>
@@ -332,14 +349,15 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
               <div
                 key={c.id || idx}
                 style={{
-                  background: 'var(--bg-primary)',
-                  border: '1px solid var(--border-color)',
+                  background: '#ffffff',
+                  border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-md)',
-                  padding: '1rem'
+                  padding: '1.25rem',
+                  boxShadow: 'var(--shadow-sm)'
                 }}
               >
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                  <div style={{ flex: '1 1 auto' }}>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 280px' }}>
                     <label className="form-label">Criterion Name</label>
                     <input
                       type="text"
@@ -350,7 +368,7 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
                     />
                   </div>
 
-                  <div style={{ width: '120px' }}>
+                  <div style={{ width: '130px' }}>
                     <label className="form-label">Max Marks</label>
                     <input
                       type="number"
@@ -370,6 +388,7 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
                     title="Delete criterion"
                   >
                     <Trash2 size={15} />
+                    <span>Delete</span>
                   </button>
                 </div>
 
@@ -417,4 +436,3 @@ export default function NewEvaluationPage({ initialData, onEvaluationCreated, ap
     </div>
   );
 }
-
