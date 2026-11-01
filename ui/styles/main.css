@@ -1,0 +1,61 @@
+/* EvalLens Clean & Professional Styling */
+
+/* Main container readability and spacing */
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    max-width: 960px;
+}
+
+/* Typography */
+h1 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+}
+
+h2, h3 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+/* Subtitle and helper text */
+.tagline {
+    font-size: 1.15rem;
+    color: #4b5563;
+    margin-bottom: 1.5rem;
+}
+
+/* Empty state container */
+.empty-state-box {
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    background-color: #f9fafb;
+    margin: 1.5rem 0;
+}
+
+.empty-state-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-desc {
+    font-size: 0.95rem;
+    color: #6b7280;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Card container for sections */
+.section-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background-color: #ffffff;
+    margin-bottom: 1.5rem;
+}
+
