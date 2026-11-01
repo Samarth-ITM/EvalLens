@@ -205,7 +205,7 @@ export default function HomePage({ evaluations, onStartNewWithContent, onSelectE
                           {comp.humanTotal} / {comp.maxTotal} pts ({comp.humanPct}%)
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          AI Diff: {comp.maePct}% MAE
+                          Diff: {Math.abs(Number((comp.humanTotal - comp.aiTotal).toFixed(1)))} pts ({comp.alignmentCategory})
                         </div>
                       </div>
                     )}

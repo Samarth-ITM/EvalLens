@@ -124,7 +124,7 @@ export default function HistoryPage({ evaluations, onSelectEvaluation, onDeleteE
                         AI: {comp.aiTotal} / {comp.maxTotal} pts
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Diff: {comp.maePct}% MAE
+                        Diff: {Math.abs(Number((comp.humanTotal - comp.aiTotal).toFixed(1)))} pts ({comp.alignmentCategory})
                       </div>
                     </div>
                   )}

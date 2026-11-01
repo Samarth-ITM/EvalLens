@@ -127,6 +127,8 @@ export default function App() {
             selectedId={activeId}
             onSelectEvaluation={(id) => setSelectedEvalId(id)}
             onUpdateEvaluation={handleUpdateEvaluation}
+            onGoHome={() => setActiveNav('home')}
+            onGoHistory={() => setActiveNav('history')}
             apiKey={settings.geminiApiKey}
             model={settings.geminiModel}
           />

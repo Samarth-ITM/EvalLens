@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Sparkles, Lock, ArrowLeft, ArrowRight, BarChart2, AlertCircle, Quote, Eye } from 'lucide-react';
+import { CheckCircle2, Sparkles, Lock, ArrowLeft, ArrowRight, BarChart2, AlertCircle, Quote, Eye, Home, History } from 'lucide-react';
 import { calculateComparison } from '../utils/scoring';
 import { evaluateSubmissionAI } from '../utils/gemini';
 
@@ -8,6 +8,8 @@ export default function EvaluatePage({
   selectedId,
   onSelectEvaluation,
   onUpdateEvaluation,
+  onGoHome,
+  onGoHistory,
   apiKey,
   model
 }) {
@@ -96,7 +98,7 @@ export default function EvaluatePage({
       const updated = {
         ...currentEval,
         ai_scores: aiResults,
-        status: hasHumanDone ? 'completed' : currentEval.status
+        status: hasHumanDone ? 'scored' : currentEval.status
       };
       onUpdateEvaluation(updated);
     } catch (err) {
@@ -112,6 +114,19 @@ export default function EvaluatePage({
       status: 'completed'
     };
     onUpdateEvaluation(updated);
+  };
+
+  const handleSaveAndDone = () => {
+    if (currentEval.status !== 'completed') {
+      const updated = {
+        ...currentEval,
+        status: 'completed'
+      };
+      onUpdateEvaluation(updated);
+    }
+    if (onGoHome) {
+      onGoHome();
+    }
   };
 
   const comp = calculateComparison(currentEval.criteria, currentEval.human_scores, currentEval.ai_scores);
@@ -144,13 +159,36 @@ export default function EvaluatePage({
         </button>
       </div>
 
-      {/* Lock Banner if Completed */}
+      {/* Lock Banner if Completed with Exit Options */}
       {isCompleted && (
-        <div className="banner banner-info">
-          <Lock size={18} />
-          <span>
-            <strong>Locked Evaluation:</strong> This evaluation is completed. You are viewing read-only historical results.
-          </span>
+        <div className="card" style={{
+          background: 'rgba(59, 130, 246, 0.1)',
+          border: '1px solid rgba(59, 130, 246, 0.3)',
+          marginBottom: '1.25rem',
+          padding: '1rem 1.25rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Lock size={20} color="var(--primary)" />
+              <div>
+                <strong style={{ fontSize: '0.95rem' }}>Locked Evaluation (Completed & Saved)</strong>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  This evaluation is saved in your history and locked in read-only mode.
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button className="btn btn-primary btn-sm" onClick={onGoHome}>
+                <Home size={15} />
+                <span>Save & Done (Proceed to Dashboard)</span>
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={onGoHistory}>
+                <History size={15} />
+                <span>View Previous Results</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -327,8 +365,8 @@ export default function EvaluatePage({
             Side-by-side alignment metrics, score variance, and evidence citations.
           </div>
 
-          {/* Metric KPI Cards */}
-          <div className="grid-4" style={{ marginBottom: '1.5rem' }}>
+          {/* Metric KPI Cards (Simple and Clear) */}
+          <div className="grid-3" style={{ marginBottom: '1.5rem' }}>
             <div className="stat-box">
               <div className="stat-value" style={{ color: 'var(--primary)' }}>
                 {comp.humanTotal} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ {comp.maxTotal}</span>
@@ -344,17 +382,10 @@ export default function EvaluatePage({
             </div>
 
             <div className="stat-box">
-              <div className="stat-value">
-                {comp.maePct !== null ? `${comp.maePct}%` : 'N/A'}
+              <div className="stat-value" style={{ color: comp.alignmentCategory === 'Strong Agreement' ? 'var(--success)' : 'var(--warning)' }}>
+                {Math.abs(Number((comp.humanTotal - comp.aiTotal).toFixed(1)))} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>pts</span>
               </div>
-              <div className="stat-label">Mean Abs Error (MAE)</div>
-            </div>
-
-            <div className="stat-box">
-              <div className="stat-value">
-                {comp.directionalBias > 0 ? `+${comp.directionalBias}` : comp.directionalBias}
-              </div>
-              <div className="stat-label">Directional Bias (pts)</div>
+              <div className="stat-label">Score Difference ({comp.alignmentCategory})</div>
             </div>
           </div>
 
@@ -429,14 +460,39 @@ export default function EvaluatePage({
             })}
           </div>
 
-          {!isCompleted && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            paddingTop: '1.25rem',
+            borderTop: '1px solid var(--border-color)',
+            marginTop: '1.5rem'
+          }}>
+            {!isCompleted ? (
               <button className="btn btn-success" onClick={handleLockEvaluation}>
                 <Lock size={16} />
                 <span>Mark Evaluation as Completed & Lock</span>
               </button>
+            ) : (
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <CheckCircle2 size={16} color="var(--success)" />
+                <span>Evaluation locked and saved.</span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={handleSaveAndDone}>
+                <Home size={16} />
+                <span>Save & Done (Proceed to Dashboard)</span>
+              </button>
+              <button className="btn btn-secondary" onClick={onGoHistory}>
+                <History size={16} />
+                <span>View Previous Results</span>
+              </button>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

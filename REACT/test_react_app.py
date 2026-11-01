@@ -76,11 +76,13 @@ def run_test():
         page.wait_for_selector("text=Comparison Dashboard: Human vs. AI")
         page.wait_for_selector("text=Human Score")
         page.wait_for_selector("text=AI Suggestion")
-        page.wait_for_selector("text=Mean Abs Error")
+        page.wait_for_selector("text=Score Difference")
 
-        # 11. Verify Locked Evaluation
-        print("11. Verifying evaluation is locked into read-only mode...")
-        page.wait_for_selector("text=Locked Evaluation")
+        # 11. Save & Done (Proceed to Dashboard)
+        print("11. Clicking Save & Done (Proceed to Dashboard)...")
+        page.click('button:has-text("Save & Done (Proceed to Dashboard)")')
+        page.wait_for_timeout(1000)
+        page.wait_for_selector("text=Recent Evaluations")
 
         # 12. Check History
         print("12. Checking Evaluation History...")
