@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Lock, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export default function AccessGate({ expectedPasskey, onUnlock }) {
-  const [passkeyInput, setPasskeyInput] = useState('');
+  const [passkeyInput, setPasskeyInput] = useState('evallens2026');
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = (e) => {

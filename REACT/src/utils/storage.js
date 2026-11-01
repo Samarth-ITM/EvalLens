@@ -5,18 +5,23 @@ const SETTINGS_KEY = 'evallens_settings';
 const AUTH_KEY = 'evallens_authenticated';
 
 export function getSettings() {
+  const envKey = import.meta.env.VITE_GEMINI_API_KEY || '';
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) {
       return {
-        geminiApiKey: '',
+        geminiApiKey: envKey,
         geminiModel: 'gemini-2.5-flash',
         passkey: 'evallens2026'
       };
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!parsed.geminiApiKey && envKey) {
+      parsed.geminiApiKey = envKey;
+    }
+    return parsed;
   } catch (e) {
-    return { geminiApiKey: '', geminiModel: 'gemini-2.5-flash', passkey: 'evallens2026' };
+    return { geminiApiKey: envKey, geminiModel: 'gemini-2.5-flash', passkey: 'evallens2026' };
   }
 }
 
