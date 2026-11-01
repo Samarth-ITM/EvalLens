@@ -137,6 +137,12 @@ def calculate_comparison(
 
     Missing AI scores are handled cleanly without treating missing scores as zero.
     """
+    # Ensure inputs are dicts if passed as sqlite3.Row or other Mapping objects
+    criteria = [dict(c) if not isinstance(c, dict) else c for c in criteria]
+    human_scores = [dict(h) if not isinstance(h, dict) else h for h in human_scores]
+    if ai_scores:
+        ai_scores = [dict(a) if not isinstance(a, dict) else a for a in ai_scores]
+
     # Index human scores by criterion_id
     human_map: Dict[int, Dict[str, Any]] = {
         int(item["criterion_id"]): item for item in human_scores

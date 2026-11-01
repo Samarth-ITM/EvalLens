@@ -1,0 +1,692 @@
+[
+  {
+    "document_id": "DOC01",
+    "filename": "rfc2119_requirement_levels.txt",
+    "title": "Key words for use in RFCs to Indicate Requirement Levels (RFC 2119)",
+    "format": "TXT",
+    "domain": "Network Protocol Standards Specification (IETF BCP 14)",
+    "evaluation_goals": "Assess whether the document clearly, unambiguously, and concisely defines normative requirement levels for IETF specifications, provides exact operational definitions of keywords, prevents misinterpretation, and includes necessary security considerations.",
+    "overall_assessment": "RFC 2119 is one of the most foundational, high-quality, and influential technical specifications in Internet history. It achieves near-perfection in brevity, clarity, and normative rigor.",
+    "overall_human_score": 24.0,
+    "max_possible_score": 25.0,
+    "percentage": 96.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC01-C1",
+        "name": "Normative Keyword Definition Precision",
+        "description": "Exhaustive and unambiguous operational definitions of MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RECOMMENDED, MAY, OPTIONAL.",
+        "max_score": 8.0,
+        "scoring_guidance": "Full marks (7.0-8.0): Definitions distinguish absolute necessity from recommendation and explain interoperability risks. Partial (4.0-6.5): Defines major keywords but lacks clarity on subtle distinctions. Zero (0.0-3.5): Ambiguous, self-contradictory definitions or missing keywords.",
+        "human_score": 8.0,
+        "justification": "Lines 31-72 provide precise, operational definitions for all 10 keywords. For example, L31-32: \"1. MUST This word, or the terms 'REQUIRED' or 'SHALL', mean that the definition is an absolute requirement of the specification.\" And L43-46 for SHOULD: \"there may exist valid reasons in particular circumstances to ignore a particular item, but the full implications must be understood and carefully weighed before choosing a different course.\""
+      },
+      {
+        "criterion_id": "DOC01-C2",
+        "name": "Standard Boilerplate Specification",
+        "description": "Provides explicit boilerplate text that authors must incorporate near the beginning of documents to invoke the standard.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Exact, copy-pasteable boilerplate phrase and clear location instructions. Partial (2.5-4.0): Mentions boilerplate without exact phrasing. Zero (0.0-2.0): Omits boilerplate instruction entirely.",
+        "human_score": 5.0,
+        "justification": "Lines 20-26 explicitly instruct: \"Authors who follow these guidelines should incorporate this phrase near the beginning of their document: The key words 'MUST', 'MUST NOT', 'REQUIRED', 'SHALL', 'SHALL NOT', 'SHOULD', 'SHOULD NOT', 'RECOMMENDED', 'MAY', and 'OPTIONAL' in this document are to be interpreted as described in RFC 2119.\""
+      },
+      {
+        "criterion_id": "DOC01-C3",
+        "name": "Guidance on Proper Imperative Usage and Restraint",
+        "description": "Explicitly cautions against overuse of imperative keywords and explains they must only be used where required for interoperability.",
+        "max_score": 7.0,
+        "scoring_guidance": "Full marks (6.0-7.0): Explicitly warns against overuse and explains interoperability requirements. Partial (3.0-5.5): Advises care in usage but lacks specific guidance on interoperability relevance. Zero (0.0-2.5): Encourages unconstrained usage.",
+        "human_score": 6.5,
+        "justification": "Lines 74-95 (Section 6 \"Guidance in the use of these Imperatives\") state: \"Imperatives of the type defined in this memo must be used with care and sparingly. In particular, they MUST only be used where it is actually required for interoperation or to limit behavior which has potential for causing harm...\". Deducted 0.5 because concrete examples of borderline misuse in actual RFC protocols could have further clarified edge cases."
+      },
+      {
+        "criterion_id": "DOC01-C4",
+        "name": "Security Considerations for Protocol Requirements",
+        "description": "Details security ramifications of non-compliance, particularly how ignoring MUST/SHOULD recommendations can create security vulnerabilities.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Details security ramifications of non-compliance. Partial (2.5-4.0): Mentions security generally. Zero (0.0-2.0): Omits security considerations entirely.",
+        "human_score": 4.5,
+        "justification": "Lines 97-104 (Section 7 \"Security Considerations\") state: \"These terms are frequently used to specify behavior with security implications. The effects on security of not implementing a MUST or a SHOULD, or doing something the procedure says MUST NOT or SHOULD NOT be done may be very subtle.\" Deducted 0.5 because the section is brief without concrete illustrative security failure modes."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC03",
+    "filename": "react_documentation.md",
+    "title": "React Repository README & Developer Overview",
+    "format": "MD",
+    "domain": "Open Source Web Framework Readme & Documentation",
+    "evaluation_goals": "Assess whether the project README serves as an effective developer portal: explaining value proposition, providing installation/getting started links, outlining architecture, explaining contribution workflows, and stating licensing.",
+    "overall_assessment": "Highly effective, polished open-source repository overview. Direct, clear, and provides all necessary entry points.",
+    "overall_human_score": 19.0,
+    "max_possible_score": 20.0,
+    "percentage": 95.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC03-C1",
+        "name": "Value Proposition & Core Concept Clarity",
+        "description": "Clear, concise explanation of library identity, philosophy, and architectural pillars.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Crisp explanation of core design principles. Partial (2.5-4.0): Generic summary. Zero (0.0-2.0): Unclear what the library does.",
+        "human_score": 5.0,
+        "justification": "Lines 3-7 provide a concise and iconic summary: \"React is a JavaScript library for building user interfaces. Declarative: React makes it painless to create interactive UIs... Component-Based: Build encapsulated components that manage their own state... Learn Once, Write Anywhere...\"."
+      },
+      {
+        "criterion_id": "DOC03-C2",
+        "name": "Onboarding & Getting Started Guidance",
+        "description": "Actionable quick start routes for new projects and existing codebases.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Clear paths for both greenfield and existing apps. Partial (2.5-4.0): Links only without explanatory structure. Zero (0.0-2.0): No onboarding guidance.",
+        "human_score": 4.5,
+        "justification": "Lines 11-17 present distinct adoption options: \"Use Quick Start to get a taste of React. Add React to an Existing Project... Create a New React App if you're looking for a powerful JavaScript toolchain\". Deducted 0.5 because npm/yarn CLI commands are not shown directly inline in the README."
+      },
+      {
+        "criterion_id": "DOC03-C3",
+        "name": "Contribution & Developer Community Guidelines",
+        "description": "Explains how to contribute, run tests, report bugs, and adheres to code of conduct.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Clear instructions for dev environment, tests, and community conduct. Partial (2.5-4.0): Mentions contributing without setup instructions. Zero (0.0-2.0): No contribution guidelines.",
+        "human_score": 4.5,
+        "justification": "Lines 44-59 list Code of Conduct, Contributing Guide, Good First Issues, and development commands. Deducted 0.5 because step-by-step local build commands are located on linked docs rather than outlined in the README."
+      },
+      {
+        "criterion_id": "DOC03-C4",
+        "name": "License & Open Source Transparency",
+        "description": "Explicit license statement, badge, and copyright notices.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Unambiguous license name and repository file link. Partial (2.5-4.0): Ambiguous license. Zero (0.0-2.0): Missing license information.",
+        "human_score": 5.0,
+        "justification": "Line 1 features the MIT license badge and Lines 76-78 state: \"React is MIT licensed, as found in the LICENSE file.\""
+      }
+    ]
+  },
+  {
+    "document_id": "DOC05",
+    "filename": "findel_coq_semantics.pdf",
+    "title": "Towards a Verified Findel: Formal Semantics in Coq (arXiv:1909.05464)",
+    "format": "PDF",
+    "domain": "Formal Methods & Smart Contracts Academic Research Paper",
+    "evaluation_goals": "Evaluate mathematical precision, Coq formalization soundness, domain-specific contract DSL design, execution model validation, and scholarly citation quality.",
+    "overall_assessment": "Strong, rigorous formal methods paper providing mechanized verification of a financial DSL.",
+    "overall_human_score": 23.0,
+    "max_possible_score": 25.0,
+    "percentage": 92.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC05-C1",
+        "name": "Formal Mathematical Semantics & Coq Specification",
+        "description": "Formal definitions of syntax, operational semantics, and Mechanized Coq theorems.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Rigorous operational semantics and formal Coq proofs. Partial (3.0-5.0): Semi-formal description lacking full proofs. Zero (0.0-2.5): Informal or hand-waving treatment.",
+        "human_score": 5.5,
+        "justification": "Lines 11-15 state: \"We present the first formal semantics of Findel - a DSL for specifying financial contracts... formalized in Coq\". Section 3 details the primitive grammar (Give, Scale, One, Truncate, And, Or, If) and valuation semantics. Deducted 0.5 because some Coq proof lemmas are deferred to an external repository."
+      },
+      {
+        "criterion_id": "DOC05-C2",
+        "name": "Financial Domain Modeling & Primitive Expressiveness",
+        "description": "Demonstrates that the primitives can accurately express real-world financial instruments.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Expresses options, swaps, forwards accurately. Partial (2.5-4.0): Toy examples only. Zero (0.0-2.0): Inadequate domain expressiveness.",
+        "human_score": 5.0,
+        "justification": "Lines 21-35 and Section 2.1 demonstrate how European Call options, zero-coupon bonds, and portfolio swaps decompose cleanly into Findel primitives."
+      },
+      {
+        "criterion_id": "DOC05-C3",
+        "name": "Execution Environment & State Invariant Guarantees",
+        "description": "Models execution environment (blockchain clock, ledger balance, counterparties) and proofs.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Models environment and proves non-negative balance safety. Partial (2.5-4.0): Incomplete environment model. Zero (0.0-2.0): Ignores execution environment.",
+        "human_score": 4.5,
+        "justification": "Section 3.2 defines the execution environment tuple (t, b, a, o) and proves ledger balance conservation. Deducted 0.5 because gas limits and transaction fee mechanics on Ethereum are left abstract."
+      },
+      {
+        "criterion_id": "DOC05-C4",
+        "name": "Comparative Analysis with Prior Work",
+        "description": "Contrasts Findel with Peyton-Jones combinators, Marlowe, and Solidity.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): In-depth comparison with related DSLs. Partial (2.5-4.0): Cites related work without deep comparison. Zero (0.0-2.0): Missing literature comparison.",
+        "human_score": 4.0,
+        "justification": "Section 4 compares the semantics to Peyton-Jones financial contracts and Ethereum smart contracts. Deducted 1.0 because modern concurrent DSLs such as Marlowe are mentioned only passingly."
+      },
+      {
+        "criterion_id": "DOC05-C5",
+        "name": "Clarity, Academic Presentation & Typography",
+        "description": "Flawless LaTeX typesetting, clear theorems, coherent narrative, well-structured sections.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Publication-quality formatting. Partial (2.0-3.0): Legible but clumsy notation. Zero (0.0-1.5): Poor formatting and structure.",
+        "human_score": 4.0,
+        "justification": "Publication-grade LaTeX layout with clear inductive inference rules and structured lemmas."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC06",
+    "filename": "xml_collaborative_undo.pdf",
+    "title": "Scalable XML Collaborative Editing with Undo (arXiv:1010.3615)",
+    "format": "PDF",
+    "domain": "Distributed Systems / Collaborative Editing Academic Paper",
+    "evaluation_goals": "Evaluate collaborative tree-editing algorithms, operational transformation vs CRDT semantics, undo/redo consistency guarantees, and empirical evaluation.",
+    "overall_assessment": "Solid distributed systems research paper addressing the difficult problem of hierarchical XML collaborative editing and selective undo.",
+    "overall_human_score": 21.5,
+    "max_possible_score": 25.0,
+    "percentage": 86.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC06-C1",
+        "name": "Tree-Structured Operational Model & Invariant Preservation",
+        "description": "Rigorous definition of XML tree node operations maintaining tree acyclicity and path validity.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Complete tree operation algebra preserving tree invariant. Partial (3.0-5.0): Tree operations defined but edge cases omitted. Zero (0.0-2.5): Fails to maintain valid tree topology.",
+        "human_score": 5.0,
+        "justification": "Sections 2 and 3 define node addressing and operation commutativity. Deducted 1.0 because concurrent move-cycle handling requires complex reordering heuristics that are only partially proved."
+      },
+      {
+        "criterion_id": "DOC06-C2",
+        "name": "Undo/Redo Semantic Correctness in Distributed Replicas",
+        "description": "Guarantees intention preservation, reversibility, and convergence under arbitrary concurrent undos.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Formally proves convergence under concurrent undo. Partial (3.0-5.0): Defines undo heuristics with known edge-case anomalies. Zero (0.0-2.5): Does not support distributed undo.",
+        "human_score": 4.5,
+        "justification": "Defines selective and chronological undo mechanisms; acknowledges limitations when dependent operations have been executed by remote peers."
+      },
+      {
+        "criterion_id": "DOC06-C3",
+        "name": "Algorithmic Complexity & Scalability Analysis",
+        "description": "Theoretical time/space bounds for transformation matrix, log garbage collection, and operation broadcast.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Complete asymptotic complexity analysis. Partial (2.5-4.0): Incomplete complexity analysis. Zero (0.0-2.0): No complexity bounds discussed.",
+        "human_score": 4.0,
+        "justification": "Section 5 provides experimental benchmarks across document sizes, but formal asymptotic bounds for deep nested trees are somewhat sparse."
+      },
+      {
+        "criterion_id": "DOC06-C4",
+        "name": "Empirical Validation & Real-World Experimentation",
+        "description": "Tests with real-world collaborative editing traces, latency simulations, and memory footprints.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Real traces and latency distributions reported. Partial (2.0-3.0): Synthetic or limited evaluation. Zero (0.0-1.5): No empirical benchmarks.",
+        "human_score": 4.0,
+        "justification": "Evaluates with simulated user traces over large XML documents, reporting millisecond response times and memory scaling."
+      },
+      {
+        "criterion_id": "DOC06-C5",
+        "name": "Scholarly Literature Positioning & Citation Rigor",
+        "description": "Comprehensive review of OT literature (Ellis & Gibbs, Sun, Ressel) and CRDT foundations.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Thorough literature context. Partial (2.0-3.0): Incomplete references. Zero (0.0-1.5): Neglects prior work.",
+        "human_score": 4.0,
+        "justification": "Strong bibliography citing canonical collaborative editing papers (Sun, Ellis, Ressel, Ignat)."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC08",
+    "filename": "stanford_comm372a_syllabus.docx",
+    "title": "Stanford COMM 372A Syllabus: Media Psychology (Fall 2025)",
+    "format": "DOCX",
+    "domain": "Higher Education Course Syllabus & Academic Policy",
+    "evaluation_goals": "Evaluate course pedagogical objectives, assignment descriptions, grading rubrics, attendance/engagement policies, academic integrity/AI policy, and weekly schedule clarity.",
+    "overall_assessment": "Exemplary, thorough graduate seminar syllabus balancing cutting-edge AI research pedagogy with rigorous institutional academic standards.",
+    "overall_human_score": 24.0,
+    "max_possible_score": 25.0,
+    "percentage": 96.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC08-C1",
+        "name": "Pedagogical Framework & Research Foundations",
+        "description": "Explains theoretical foundation regarding media psychology, synthetic personas, and simulation of human responses in communication research.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Thorough, inspiring research foundation and clear seminar purpose. Partial (2.5-4.0): General discussion without theoretical framing. Zero (0.0-2.0): Vague or missing pedagogical focus.",
+        "human_score": 5.0,
+        "justification": "Lines 15-21 articulate a profound research agenda: \"LLMs allow the creation of synthetic personas... that may be able to simulate human responses to media. Those simulations, if proven accurate, could change how communication research with and about media is conducted...\""
+      },
+      {
+        "criterion_id": "DOC08-C2",
+        "name": "Seminar Requirements & Evaluation Structure",
+        "description": "Clear description of course expectations, active seminar participation, weekly oral presentations, and grade allocation.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Explicit expectations and grade breakdown. Partial (2.5-4.0): Requirements stated without grade breakdown. Zero (0.0-2.0): Ambiguous expectations.",
+        "human_score": 4.5,
+        "justification": "Lines 23-25 detail course requirements: regular attendance, engagement, weekly presentations, and final report. States grade is split equally (50/50). Deducted 0.5 because specific rubric bands for oral presentation grading are not provided."
+      },
+      {
+        "criterion_id": "DOC08-C3",
+        "name": "Term Project Typologies & Research Guidance",
+        "description": "Concrete guidance and illustrative project ideas enabling graduate students to design empirical synthetic persona studies.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Rich menu of concrete, viable research project typologies. Partial (2.5-4.0): Generic project requirement. Zero (0.0-2.0): No project guidance.",
+        "human_score": 5.0,
+        "justification": "Lines 27-60 provide an exhaustive list of 10 distinct empirical project typologies including stimulus pretesting, lab replication, measure testing, and sensitive media effects studies."
+      },
+      {
+        "criterion_id": "DOC08-C4",
+        "name": "Scholarly Reading List & Literature Breadth",
+        "description": "Comprehensive peer-reviewed reading list covering foundational and state-of-the-art studies in leading scientific journals.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Extensive citations from premier multidisciplinary and field-specific journals. Partial (2.5-4.0): Minimal citations. Zero (0.0-2.0): Outdated or missing reading list.",
+        "human_score": 5.0,
+        "justification": "Lines 17-19 and 61-285 contain dozens of citations spanning Science, Nature, PNAS, and top specialty communication and psychology journals."
+      },
+      {
+        "criterion_id": "DOC08-C5",
+        "name": "Weekly Seminar Schedule & Milestone Cadence",
+        "description": "Structured 10-week seminar calendar with weekly themes, assigned readings, and clear deliverable timelines.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Well-structured 10-week schedule with specific readings per week. Partial (2.5-4.0): Broad weekly topics without specific readings. Zero (0.0-2.0): Unscheduled course outline.",
+        "human_score": 4.5,
+        "justification": "Lines 61-285 provide an organized week-by-week schedule through Dec 10. Deducted 0.5 because final project oral presentation time slots are left flexible."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC09",
+    "filename": "calibre_conversion_demo.docx",
+    "title": "Demonstration of DOCX support in Calibre (E-book Conversion Benchmark)",
+    "format": "DOCX",
+    "domain": "Technical Software Documentation / Format Conversion Benchmark",
+    "evaluation_goals": "Test word processor formatting features: font styles, drop caps, multi-column tables, inline images, nested lists, footnotes, and math symbols.",
+    "overall_assessment": "Outstanding stress-test document created specifically to exercise document parser capabilities and rendering fidelity.",
+    "overall_human_score": 24.5,
+    "max_possible_score": 25.0,
+    "percentage": 98.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC09-C1",
+        "name": "Typography, Heading Hierarchy & Text Styles Coverage",
+        "description": "Demonstrates title, subtitle, headings 1-6, italic, bold, underline, strikethrough, superscripts, subscripts.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Complete typographical variations tested. Partial (2.5-4.0): Only basic styles. Zero (0.0-2.0): Unformatted text.",
+        "human_score": 5.0,
+        "justification": "Lines 1-40 demonstrate complete typographic hierarchy with embedded Ubuntu fonts and inline styling."
+      },
+      {
+        "criterion_id": "DOC09-C2",
+        "name": "Complex Table Formatting & Column Span Layout",
+        "description": "Multiple tables demonstrating merged cells, border styles, cell shading, header rows, and alignment.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Multiple complex tables with cell merges and formatting. Partial (3.0-5.0): Simple grid table only. Zero (0.0-2.5): Tables omitted or corrupted.",
+        "human_score": 5.5,
+        "justification": "Contains 5 distinct data tables (Table 1: basic formatting, Table 2: merged cells, Table 3: numeric alignments, Table 4: colored borders, Table 5: nested content). Deducted 0.5 because some column widths in Table 4 have minor auto-wrap irregularities."
+      },
+      {
+        "criterion_id": "DOC09-C3",
+        "name": "Footnotes, Endnotes & Hyperlink Cross-References",
+        "description": "Includes working footnotes, bidirectional links, and external hyperlinks.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Working footnotes and bidirectional hyperlinks. Partial (2.5-4.0): External links only. Zero (0.0-2.0): Missing cross-references.",
+        "human_score": 5.0,
+        "justification": "Includes footnotes testing EPUB note back-linking and external anchors."
+      },
+      {
+        "criterion_id": "DOC09-C4",
+        "name": "List Nesting & Bullet/Numbered Multi-Level Indentation",
+        "description": "Ordered, unordered, and multi-level nested lists with custom numbering formats.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Multi-level nested lists. Partial (2.5-4.0): Single-level bullets only. Zero (0.0-2.0): No lists.",
+        "human_score": 5.0,
+        "justification": "Comprehensive list demonstration with Roman numerals, alphabetic sublists, and bullet points."
+      },
+      {
+        "criterion_id": "DOC09-C5",
+        "name": "Conversion Instructions & Practical Software Guidance",
+        "description": "Explains how Calibre handles DOCX conversion quirks, best practices for ebook generation.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Clear guidance on conversion settings. Partial (2.0-3.0): Brief mention. Zero (0.0-1.5): No conversion context.",
+        "human_score": 4.0,
+        "justification": "Thorough guidance on ebook publishing workflows and Calibre settings."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC11",
+    "filename": "cpython_heapq.py",
+    "title": "CPython heapq Standard Library Module",
+    "format": "PY",
+    "domain": "Standard Library Algorithm & Data Structure Implementation",
+    "evaluation_goals": "Evaluate algorithmic correctness (min-heap invariant), performance optimization (sift-up, sift-down, nlargest/nsmallest heuristics), doctest/documentation coverage, and C-accelerator fallback architecture.",
+    "overall_assessment": "Gold-standard production code from CPython standard library; perfect benchmark control for algorithmic software evaluation.",
+    "overall_human_score": 25.0,
+    "max_possible_score": 25.0,
+    "percentage": 100.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC11-C1",
+        "name": "Algorithmic Correctness & Heap Invariant Preservation",
+        "description": "Flawless min-heap implementation maintaining a[k] <= a[2*k+1] and a[k] <= a[2*k+2].",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Mathematically correct 0-indexed heap algorithms. Partial (3.0-5.0): Functional heap with suboptimal sift logic. Zero (0.0-2.5): Violates heap invariant.",
+        "human_score": 6.0,
+        "justification": "Flawless zero-indexed array heap operations (_siftdown, _siftup) in Lines 190-250."
+      },
+      {
+        "criterion_id": "DOC11-C2",
+        "name": "Extreme-Value Selection Heuristics (nlargest/nsmallest)",
+        "description": "Adaptive dispatch choosing between sorting, min/max selection, and bounded heap queues.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Optimal fast-paths for n==1, small n, large n. Partial (2.5-4.0): Generic heap approach without heuristics. Zero (0.0-2.0): Inefficient or buggy implementation.",
+        "human_score": 5.0,
+        "justification": "Lines 400-580 implement optimal fast-paths (single element min/max, full sort if n close to size, bounded heapification otherwise)."
+      },
+      {
+        "criterion_id": "DOC11-C3",
+        "name": "Comprehensive Doctests & Executable Documentation",
+        "description": "Rich docstrings with executable doctest examples illustrating common idioms.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Complete doctests and usage patterns. Partial (2.5-4.0): Basic comments only. Zero (0.0-2.0): Missing documentation.",
+        "human_score": 5.0,
+        "justification": "Lines 1-120 docstring contains complete heapsort examples, task priority queue with counter for stability, and invariant proofs."
+      },
+      {
+        "criterion_id": "DOC11-C4",
+        "name": "Dual C/Python Architecture & Seamless Acceleration",
+        "description": "Pure-Python implementation exported with graceful try/except import of C-accelerator _heapq.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Seamless fallback mechanism. Partial (2.5-4.0): Tightly coupled to C without pure Python fallback. Zero (0.0-2.0): No acceleration or fallback.",
+        "human_score": 5.0,
+        "justification": "Lines 600-610 provide clean fallback: \"try: from _heapq import * except ImportError: pass\"."
+      },
+      {
+        "criterion_id": "DOC11-C5",
+        "name": "Code Readability, PEP 8 Compliance & Invariant Comments",
+        "description": "Clear variable naming, internal helper documentation explaining indexing math.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Masterful code style and mathematical comments. Partial (2.0-3.0): Acceptable styling. Zero (0.0-1.5): Obfuscated code.",
+        "human_score": 4.0,
+        "justification": "Raymond Hettinger's masterclass comments on heap mathematics."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC13",
+    "filename": "abseil_str_cat.cpp",
+    "title": "Google Abseil str_cat.cpp Systems Concatenation Library",
+    "format": "CPP",
+    "domain": "High-Performance Systems C++ Library",
+    "evaluation_goals": "Evaluate string concatenation performance, memory pre-allocation, buffer overflow prevention, type-safety across variadic arguments, and template metaprogramming cleanliness.",
+    "overall_assessment": "High-performance systems C++ code engineered for extreme throughput at Google scale.",
+    "overall_human_score": 24.0,
+    "max_possible_score": 25.0,
+    "percentage": 96.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC13-C1",
+        "name": "Zero-Allocation String Concatenation & Capacity Precalculation",
+        "description": "Computes exact aggregate string length before allocation, performing a single heap malloc.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Precomputes total size and resizes once. Partial (3.0-5.0): Multiple reallocations during concatenation. Zero (0.0-2.5): Repeated naive string addition.",
+        "human_score": 6.0,
+        "justification": "Section StrCat implementation sums piece.size() across all arguments and calls result.resize() once before memcpy."
+      },
+      {
+        "criterion_id": "DOC13-C2",
+        "name": "Memory Safety & Buffer Bounds Checking",
+        "description": "Complete prevention of buffer overruns, pointer overflow checks, defensive assertions.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Robust memory bounds checking. Partial (3.0-5.0): Basic bounds check with minor edge vulnerabilities. Zero (0.0-2.5): Unsafe pointer arithmetic.",
+        "human_score": 5.5,
+        "justification": "Flawless buffer boundary calculations; deducted 0.5 because raw pointer operations in internal AppendPieces assume callers have validated non-wrapping sizes."
+      },
+      {
+        "criterion_id": "DOC13-C3",
+        "name": "Variadic Overload Efficiency & Inlining",
+        "description": "Specialized unrolled overloads for 1, 2, 3, 4 arguments avoiding recursion overhead.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Optimized unrolled overloads. Partial (2.5-4.0): Recursive variadic templates. Zero (0.0-2.0): Inefficient runtime dispatch.",
+        "human_score": 5.0,
+        "justification": "Highly optimized 2-, 3-, 4-argument overloads minimizing stack frames."
+      },
+      {
+        "criterion_id": "DOC13-C4",
+        "name": "Portability & Modern C++ Idiom Compliance",
+        "description": "Strict adherence to Abseil C++ style guidelines, portability across GCC/Clang/MSVC, noexcept.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Cross-compiler portable C++. Partial (2.0-3.0): Compiler-specific extensions. Zero (0.0-1.5): Outdated C++ syntax.",
+        "human_score": 4.0,
+        "justification": "Clean Google C++ standard library code complying with Google C++ Style Guide."
+      },
+      {
+        "criterion_id": "DOC13-C5",
+        "name": "Internal Documentation & Code Structure",
+        "description": "Clear header documentation, distinct private implementation namespace (str_cat_internal).",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Clean internal namespacing and comments. Partial (2.0-3.0): Limited comments. Zero (0.0-1.5): Global pollution and zero comments.",
+        "human_score": 3.5,
+        "justification": "Implementation file contains concise comments, though detailed API docstrings reside in the companion .h file."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC16",
+    "filename": "commons_pair.java",
+    "title": "Apache Commons Lang Pair.java Implementation",
+    "format": "JAVA",
+    "domain": "Enterprise Java Utility Library (Apache Commons Lang)",
+    "evaluation_goals": "Evaluate generic type design, Map.Entry contract compliance, equals/hashCode/compareTo consistency, serializability, and Javadoc completeness.",
+    "overall_assessment": "Robust, production-hardened Java utility class adhering to strict enterprise API contracts.",
+    "overall_human_score": 24.5,
+    "max_possible_score": 25.0,
+    "percentage": 98.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC16-C1",
+        "name": "Generic Type Safety & Invariant Encapsulation",
+        "description": "Clean type parameters <L, R>, abstract accessors getLeft(), getRight(), factory methods of().",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Clean generics and factory patterns. Partial (2.5-4.0): Raw types or mutable exposure. Zero (0.0-2.0): Type-unsafe design.",
+        "human_score": 5.0,
+        "justification": "Lines 30-65 provide type-safe accessors and factory methods."
+      },
+      {
+        "criterion_id": "DOC16-C2",
+        "name": "Map.Entry Contract Adherence & Key/Value Mapping",
+        "description": "Faithfully implements getKey() -> getLeft(), getValue() -> getRight(), with setValue() semantics.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Strict Map.Entry compliance. Partial (2.5-4.0): Deviates from Map.Entry contract. Zero (0.0-2.0): Fails contract.",
+        "human_score": 5.0,
+        "justification": "Lines 75-95 map key/value and document UnsupportedOperationException for immutable implementations."
+      },
+      {
+        "criterion_id": "DOC16-C3",
+        "name": "Object Identity, equals, hashCode & compareTo Symmetry",
+        "description": "Meets Map.Entry hashCode contract, reflexive equals, and pair-wise comparable logic.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Exact XOR hash code and symmetric equals. Partial (3.0-5.0): Standard Objects.hash deviating from Map.Entry. Zero (0.0-2.5): Broken equals/hashCode.",
+        "human_score": 6.0,
+        "justification": "Lines 110-160 implement exact Map.Entry specification with Objects.equals and bitwise XOR hash code."
+      },
+      {
+        "criterion_id": "DOC16-C4",
+        "name": "Functional Interface Extensions (accept, apply)",
+        "description": "Support for Java 8+ bi-consumer and bi-function lambda callbacks with exception propagation.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): First-class functional extensions. Partial (2.0-3.0): Minimal lambda support. Zero (0.0-1.5): No functional methods.",
+        "human_score": 4.0,
+        "justification": "Lines 180-220 provide accept and apply taking FailableBiConsumer / FailableBiFunction."
+      },
+      {
+        "criterion_id": "DOC16-C5",
+        "name": "Javadoc & Deprecation / Migration Clarity",
+        "description": "Comprehensive Javadoc on all public methods, @param, @return, @throws, and @since tags.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Flawless Javadoc on all APIs. Partial (2.5-4.0): Missing tags on some methods. Zero (0.0-2.0): Sparse documentation.",
+        "human_score": 4.5,
+        "justification": "Exemplary Javadoc on all methods. Deducted 0.5 because some internal null-safety annotations are omitted."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC18",
+    "filename": "vue_ref.ts",
+    "title": "Vue.js 3 Reactivity Core: ref.ts",
+    "format": "TS",
+    "domain": "Reactive Frontend TypeScript Framework",
+    "evaluation_goals": "Evaluate TypeScript type mechanics (unwrapping, shallow refs, custom ref typings), reactive dependency tracking (trackRefValue, triggerRefValue), and getter/setter property descriptor encapsulation.",
+    "overall_assessment": "Masterclass in modern TypeScript systems engineering powering Vue 3's reactivity core.",
+    "overall_human_score": 24.5,
+    "max_possible_score": 25.0,
+    "percentage": 98.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC18-C1",
+        "name": "TypeScript Generics & Recursive Type Unwrapping",
+        "description": "Advanced type definitions (UnwrapRef, ShallowRef) handling primitive literals and proxies.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Handles deep unwrapping without type decay. Partial (3.0-5.0): Shallow unwrapping only. Zero (0.0-2.5): Broken typing with any casts.",
+        "human_score": 5.5,
+        "justification": "Complex conditional types (IfAny, UnwrapRefSimple) handle deep unwrapping. Deducted 0.5 because deep unwrapping of complex recursive types can occasionally hit compiler depth limits in TS edge cases."
+      },
+      {
+        "criterion_id": "DOC18-C2",
+        "name": "Dependency Tracking & Trigger Engine Integration",
+        "description": "Transparent integration with Vue effect dependency set (Dep), trackRefValue, triggerRefValue.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Precise dirty-checking and dependency subscription. Partial (3.0-5.0): Redundant triggers. Zero (0.0-2.5): Missing effect tracking.",
+        "human_score": 6.0,
+        "justification": "Lines 100-160 implement RefImpl with precise dirty checking via hasChanged(newVal, this._rawValue)."
+      },
+      {
+        "criterion_id": "DOC18-C3",
+        "name": "Property Descriptor & Proxy Trap Encapsulation",
+        "description": "Clean getter/setter value accessors, private symbol branding (RefSymbol) preventing collision.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Private unique symbol branding. Partial (2.5-4.0): Public string flags for type detection. Zero (0.0-2.0): Unsafe property access.",
+        "human_score": 5.0,
+        "justification": "Lines 26-35 defines private unique symbols and clean value accessors."
+      },
+      {
+        "criterion_id": "DOC18-C4",
+        "name": "Shallow & Custom Ref Specialization",
+        "description": "Specializations for performance (shallowRef, triggerRef) and user-defined scheduling (customRef).",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Comprehensive shallow and custom ref implementations. Partial (2.0-3.0): Incomplete customRef API. Zero (0.0-1.5): Only standard ref provided.",
+        "human_score": 4.0,
+        "justification": "Comprehensive coverage of shallow and custom ref implementations."
+      },
+      {
+        "criterion_id": "DOC18-C5",
+        "name": "Error Handling, Dev-Mode Warnings & Tree-Shaking",
+        "description": "Clear warnings when mutating readonly refs, development warnings stripped in production builds.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Clean DEV flags and informative console warnings. Partial (2.0-3.0): Missing dev warnings. Zero (0.0-1.5): Uninformative crashes.",
+        "human_score": 4.0,
+        "justification": "Clean DEV flags and informative console warnings."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC20",
+    "filename": "w3c_consortium_mission.html",
+    "title": "World Wide Web Consortium (W3C) Mission Document",
+    "format": "HTML",
+    "domain": "Web Standards Organization Semantic Document",
+    "evaluation_goals": "Evaluate HTML5 semantic structure, web accessibility (ARIA roles, keyboard nav, screen reader friendliness), progressive enhancement (CSS mustard cut), and organizational mission communication.",
+    "overall_assessment": "State-of-the-art semantic HTML document authored directly by the World Wide Web Consortium.",
+    "overall_human_score": 24.0,
+    "max_possible_score": 25.0,
+    "percentage": 96.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC20-C1",
+        "name": "HTML5 Semantic Architecture & Landmark Elements",
+        "description": "Proper use of <header>, <nav>, <main>, <article>, <section>, <aside>, <footer>.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Exemplary semantic landmark hierarchy. Partial (3.0-5.0): Excessive div wrappers. Zero (0.0-2.5): Pure div soup.",
+        "human_score": 5.5,
+        "justification": "Clean landmarks with <nav id=\"nav\">, <main id=\"main\">, <footer class=\"global-footer\">. Deducted 0.5 because some inner content blocks rely on nested <div> wrappers for grid layout."
+      },
+      {
+        "criterion_id": "DOC20-C2",
+        "name": "Accessibility (a11y) & Screen Reader Readiness",
+        "description": "Skip-to-content links, aria-label, proper heading hierarchy, alt tags on functional images.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): WCAG AAA compliance. Partial (3.0-5.0): Minor a11y gaps. Zero (0.0-2.5): Inaccessible markup.",
+        "human_score": 5.5,
+        "justification": "Contains skip link (<a href=\"#main\" class=\"skip-link\">Skip to content</a>) and accessible navigation landmarks. Deducted 0.5 because some SVG icons lack explicit aria-hidden=\"true\"."
+      },
+      {
+        "criterion_id": "DOC20-C3",
+        "name": "Progressive Enhancement & Responsive Design Hygiene",
+        "description": "Meta viewport, CSS mustard cutting, font-loading promises, graceful fallback for non-JS.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Sophisticated mustard cut and graceful degradation. Partial (2.5-4.0): Basic responsive tags. Zero (0.0-2.0): Missing viewport tag.",
+        "human_score": 5.0,
+        "justification": "Lines 15-35 features sophisticated CSS mustard cut media queries and async font loading."
+      },
+      {
+        "criterion_id": "DOC20-C4",
+        "name": "Content Clarity & Mission Statement Communication",
+        "description": "Clear articulation of W3C principles: Web for All, Web on Everything, Trust & Security.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Inspiring and clear web governance narrative. Partial (2.0-3.0): Generic mission. Zero (0.0-1.5): Vague content.",
+        "human_score": 4.0,
+        "justification": "Strong, inspiring statement of open web principles."
+      },
+      {
+        "criterion_id": "DOC20-C5",
+        "name": "Metadata, Open Graph & SEO Hygiene",
+        "description": "Title tags, canonical links, social metadata, favicons across platforms.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Complete metadata and favicons. Partial (2.0-3.0): Missing canonical or social tags. Zero (0.0-1.5): Missing title or metadata.",
+        "human_score": 4.0,
+        "justification": "Complete favicon sets and canonical URLs."
+      }
+    ]
+  },
+  {
+    "document_id": "DOC22",
+    "filename": "supabase_verification_schema.sql",
+    "title": "Protidhwani Verification Database Schema (PostgreSQL)",
+    "format": "SQL",
+    "domain": "Relational Database Schema & Data Integrity DDL",
+    "evaluation_goals": "Evaluate relational schema design (PKs, FKs, cascade behavior), enum type safety, index optimization for query patterns, timestamp management, and row-level security / RBAC permissions.",
+    "overall_assessment": "High-quality, modern PostgreSQL schema demonstrating enterprise relational best practices.",
+    "overall_human_score": 24.5,
+    "max_possible_score": 25.0,
+    "percentage": 98.0,
+    "criteria": [
+      {
+        "criterion_id": "DOC22-C1",
+        "name": "Relational Integrity & Key Constraints",
+        "description": "UUID primary keys (gen_random_uuid()), foreign keys with on delete cascade, non-null constraints.",
+        "max_score": 6.0,
+        "scoring_guidance": "Full marks (5.5-6.0): Robust foreign keys and cascade rules. Partial (3.0-5.0): Foreign keys without cascade or index. Zero (0.0-2.5): Unconstrained loose tables.",
+        "human_score": 6.0,
+        "justification": "Lines 16-28 defines verification_claims with UUID PK and references public.profiles(id) on delete cascade."
+      },
+      {
+        "criterion_id": "DOC22-C2",
+        "name": "Custom Enum Typing & Status State Machine",
+        "description": "Custom Postgres enum type (claim_status) with discrete lifecycle states, preventing invalid status transitions.",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Explicit enum with duplicate protection. Partial (2.5-4.0): Free-form string columns. Zero (0.0-2.0): Unvalidated status field.",
+        "human_score": 5.0,
+        "justification": "Lines 9-13 defines enum with graceful exception when duplicate_object then null."
+      },
+      {
+        "criterion_id": "DOC22-C3",
+        "name": "Indexing Strategy & Query Optimization",
+        "description": "Multi-column composite indexes covering common query filters (user + created_at desc, status + created_at desc).",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Optimized composite indexes matching query patterns. Partial (2.5-4.0): Single-column index only. Zero (0.0-2.0): Missing indexes on foreign keys/filters.",
+        "human_score": 5.0,
+        "justification": "Lines 29-33 builds composite descending indexes specifically targeting timeline queries."
+      },
+      {
+        "criterion_id": "DOC22-C4",
+        "name": "Role-Based Access Permissions & Security",
+        "description": "Least-privilege grant statements distinguishing authenticated users (CRUD) from anon users (read-only).",
+        "max_score": 5.0,
+        "scoring_guidance": "Full marks (4.5-5.0): Fine-grained permissions and RLS. Partial (2.5-4.0): Permissions granted without anon restriction. Zero (0.0-2.0): Unrestricted public access.",
+        "human_score": 4.5,
+        "justification": "Lines 34-35 explicitly grants appropriate privileges; deducted 0.5 because Row-Level Security is not explicitly invoked in this excerpt (it relies on parent schema)."
+      },
+      {
+        "criterion_id": "DOC22-C5",
+        "name": "Documentation, Idempotency & DDL Cleanliness",
+        "description": "Uses if not exists, header comments documenting execution order, clean indentation.",
+        "max_score": 4.0,
+        "scoring_guidance": "Full marks (3.5-4.0): Completely idempotent script with documentation. Partial (2.0-3.0): Non-idempotent DDL. Zero (0.0-1.5): Uncommented, brittle SQL.",
+        "human_score": 4.0,
+        "justification": "Excellent documentation and idempotent DDL statements."
+      }
+    ]
+  }
+]

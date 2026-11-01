@@ -25,3 +25,4 @@ services:
       name: evallens-storage
       mountPath: /var/data
       sizeGB: 1
+

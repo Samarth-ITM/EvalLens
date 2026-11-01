@@ -626,3 +626,28 @@ streamlit run app.py
 3. **Scanned / Image-Only PDFs:** The prototype parses textual PDF streams (`pypdf`). Image-only scanned PDFs return an informative warning advising the user to paste text or provide a digital document. OCR is explicitly out of scope for this prototype.
 4. **Internet Dependency for AI Inference:** Criteria generation and AI evaluation require an outbound connection to `generativelanguage.googleapis.com`. Human scoring and comparison viewing functions completely offline without internet.
 5. **No Absolute Ground Truth:** The tool measures alignment and divergence between human evaluators and AI rubric suggestions; it does not claim to establish an absolute objective truth.
+
+---
+
+## 12. Real-World Document Evaluation Study & Quality Audit
+
+In Series 10, EvalLens was subjected to an independent quality audit using **23 genuine, publicly accessible documents** collected from official standards bodies, academic repositories, major open-source projects, university course portals, and enterprise databases.
+
+### 1. Corpus and Ground Truth Methodology
+- **Format Coverage:** All 15 supported formats (`TXT`, `MD`, `PDF`, `DOCX`, `PY`, `CPP`, `H`, `HPP`, `JAVA`, `JS`, `TS`, `JSON`, `HTML`, `CSS`, `SQL`) were represented in the test corpus (`TEST/real_world_corpus/corpus_manifest.json`).
+- **Independent Ground Truth Benchmark:** Prior to executing automated evaluations, an independent human ground truth evaluation was authored for 12 representative documents across 10 distinct formats, establishing approved criteria, maximum marks, scoring guidance, verbatim text justifications, and human scores (`TEST/human_reference_evaluations.json` and `TEST/human_reference_evaluations.md`).
+- **Zero Synthetic Documents:** No AI-generated submissions, synthetic mockups, or fabricated ground truth scores were permitted.
+
+### 2. Audit Findings & Metrics Summary
+- **Ingestion Pipeline:** 23 of 23 documents parsed with 100% success.
+- **5,000-Word Boundary Enforcement:** 4 of 4 boundary files (`DOC02`, `DOC04`, `DOC07`, `DOC23`) were strictly rejected at the ingestion boundary with explicit word counts, verifying that no silent truncation occurs.
+- **Human-AI Close Agreement Rate:** **86.2%** of criteria scored within $\le 10$ percentage points.
+- **Exact Agreement Rate:** **60.3%** of criteria identically scored ($0.0$ difference).
+- **Mean Absolute Error (MAE):** **6.53%** normalized score delta across 58 evaluated criteria.
+- **Directional Bias:** **$-0.04$ marks** (neutral calibration; AI scores $0.04$ marks lower on average).
+- **Evidence Grounding Rate:** **91.4%** verbatim/normalized match; **100%** semantic match. Zero hallucinated citations or fabricated facts.
+- **Performance & Cost:**
+  - Criteria Generation Latency: **4.73s** average.
+  - AI Scoring Latency: **3.71s** average.
+  - Evaluation Cost: **\$0.006 USD** total for all 12 benchmark documents (~**\$0.0005 USD per document** using `gemini-3.5-flash-lite`).
+- **Comprehensive Audit Report:** Authored at `TEST/real_world_evaluation_audit.md`.
