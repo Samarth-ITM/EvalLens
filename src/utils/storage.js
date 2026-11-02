@@ -11,7 +11,7 @@ export function getSettings() {
     if (!raw) {
       return {
         geminiApiKey: envKey,
-        geminiModel: 'gemini-2.5-flash',
+        geminiModel: 'gemini-3.5-flash-lite',
         passkey: 'evallens2026'
       };
     }
@@ -19,9 +19,12 @@ export function getSettings() {
     if (!parsed.geminiApiKey && envKey) {
       parsed.geminiApiKey = envKey;
     }
+    if (!parsed.geminiModel || parsed.geminiModel === 'gemini-2.5-flash') {
+      parsed.geminiModel = 'gemini-3.5-flash-lite';
+    }
     return parsed;
   } catch (e) {
-    return { geminiApiKey: envKey, geminiModel: 'gemini-2.5-flash', passkey: 'evallens2026' };
+    return { geminiApiKey: envKey, geminiModel: 'gemini-3.5-flash-lite', passkey: 'evallens2026' };
   }
 }
 

@@ -4,7 +4,7 @@ import { Settings, Key, Eye, EyeOff, Check, AlertCircle, RefreshCw, Trash2, Shie
 export default function SettingsPage({ settings, onSaveSettings, onResetDemoData }) {
   const [apiKey, setApiKey] = useState(settings.geminiApiKey || '');
   const [showKey, setShowKey] = useState(false);
-  const [model, setModel] = useState(settings.geminiModel || 'gemini-2.5-flash');
+  const [model, setModel] = useState(settings.geminiModel || 'gemini-3.5-flash-lite');
   const [passkey, setPasskey] = useState(settings.passkey || 'evallens2026');
   
   const [isTestingKey, setIsTestingKey] = useState(false);
@@ -141,10 +141,9 @@ export default function SettingsPage({ settings, onSaveSettings, onResetDemoData
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
               >
-                <option value="gemini-2.5-flash">gemini-2.5-flash (Fast, recommended)</option>
-                <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Cost-effective)</option>
-                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                <option value="gemini-1.5-pro">gemini-1.5-pro (High capability)</option>
+                <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Active, High-Speed & Reliable)</option>
+                <option value="gemini-3.5-flash">gemini-3.5-flash (Standard Multimodal)</option>
+                <option value="gemini-3.8-flash">gemini-3.8-flash (Latest Preview)</option>
               </select>
             </div>
           </div>

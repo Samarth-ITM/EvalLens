@@ -3,7 +3,7 @@
 /**
  * Calls Gemini REST API or falls back to smart offline generator
  */
-export async function generateCriteriaAI({ title, submissionType, instructions, contentText, apiKey, model = 'gemini-2.5-flash' }) {
+export async function generateCriteriaAI({ title, submissionType, instructions, contentText, apiKey, model = 'gemini-3.5-flash-lite' }) {
   if (apiKey && apiKey.trim()) {
     try {
       return await callGeminiCriteriaAPI({ title, submissionType, instructions, contentText, apiKey: apiKey.trim(), model });
@@ -19,7 +19,7 @@ export async function generateCriteriaAI({ title, submissionType, instructions, 
 /**
  * Evaluates submission using Gemini REST API or smart offline fallback
  */
-export async function evaluateSubmissionAI({ contentText, criteria, instructions, apiKey, model = 'gemini-2.5-flash' }) {
+export async function evaluateSubmissionAI({ contentText, criteria, instructions, apiKey, model = 'gemini-3.5-flash-lite' }) {
   if (apiKey && apiKey.trim()) {
     try {
       return await callGeminiEvaluationAPI({ contentText, criteria, instructions, apiKey: apiKey.trim(), model });
