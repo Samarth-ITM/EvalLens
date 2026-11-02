@@ -429,7 +429,7 @@ export default function EvaluatePage({
                           borderLeft: '2px solid var(--primary)'
                         }}>
                           <Quote size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
-                          <span><em>"{aiEntry.evidence_quote}"</em></span>
+                          <span><strong style={{ color: '#1e40af' }}>Quoted Evidence: </strong><em>"{aiEntry.evidence_quote}"</em></span>
                         </div>
                       )}
                     </div>
