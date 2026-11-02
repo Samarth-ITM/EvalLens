@@ -110,7 +110,7 @@ Backpressure propagation took up to 850ms to throttle upstream Kafka ingress top
 
         # Generate criteria with AI
         page.click('button:has-text("Analyze Submission with AI")')
-        page.wait_for_selector("text=Review & Calibrate Rubric", timeout=10000)
+        page.wait_for_selector("text=Review & Calibrate Rubric", timeout=30000)
         page.screenshot(path=os.path.join(SCREENSHOT_DIR, "screenshot_rubric.png"))
         print("  ✓ AI Rubric generated and calibrated successfully. Captured screenshot_rubric.png.")
 
